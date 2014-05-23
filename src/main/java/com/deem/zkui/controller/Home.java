@@ -1,20 +1,20 @@
 /**
-#
-# Copyright (c) 2014, Deem Inc. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-*/
+ *
+ * Copyright (c) 2014, Deem Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ */
 package com.deem.zkui.controller;
 
 import freemarker.template.TemplateException;
@@ -171,7 +171,7 @@ public class Home extends HttpServlet {
                             for (String prop : propChkGroup) {
                                 List delPropLst = Arrays.asList(prop);
                                 ZooKeeperUtil.INSTANCE.deleteLeaves(delPropLst, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0]));
-                                request.getSession().setAttribute("flashMsg", "Delete Successfull!");
+                                request.getSession().setAttribute("flashMsg", "Delete Completed!");
                                 dao.insertHistory((String) request.getSession().getAttribute("authName"), request.getRemoteAddr(), "Deleting Property: " + delPropLst.toString());
                             }
                         }
@@ -179,7 +179,7 @@ public class Home extends HttpServlet {
                             for (String node : nodeChkGroup) {
                                 List delNodeLst = Arrays.asList(node);
                                 ZooKeeperUtil.INSTANCE.deleteFolders(delNodeLst, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0]));
-                                request.getSession().setAttribute("flashMsg", "Delete Successfull!");
+                                request.getSession().setAttribute("flashMsg", "Delete Completed!");
                                 dao.insertHistory((String) request.getSession().getAttribute("authName"), request.getRemoteAddr(), "Deleting Nodes: " + delNodeLst.toString());
                             }
                         }
