@@ -43,7 +43,7 @@ public class AuthFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
 
-        if (!request.getRequestURI().contains("/login")) {
+        if (!request.getRequestURI().contains("/login") && !request.getRequestURI().contains("/acd/appconfig")) {
             RequestDispatcher dispatcher;
             HttpSession session = request.getSession();
             if (session != null) {
