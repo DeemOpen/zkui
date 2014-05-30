@@ -32,7 +32,6 @@ import com.deem.zkui.vo.LeafBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 @SuppressWarnings("serial")
 @WebServlet(urlPatterns = {"/acd/appconfig"})
 public class RestAccess extends HttpServlet {
@@ -50,7 +49,7 @@ public class RestAccess extends HttpServlet {
             String clusterName = request.getParameter("cluster");
             String appName = request.getParameter("app");
             String hostName = request.getParameter("host");
-            String propNames = request.getParameter("propNames");
+            String[] propNames = request.getParameterValues("propNames");
             String propValue = "";
 
             if (hostName == null) {
@@ -68,19 +67,26 @@ public class RestAccess extends HttpServlet {
                 lookupPath.append("/").append(appName).append("/").append(hostName);
             }
 
-            StringBuffer concatPath = new StringBuffer();
+            
+            StringBuilder resultOut = new StringBuilder();
             LeafBean propertyNode;
             String[] pathElements = lookupPath.toString().split("/");
-            for (String path : pathElements) {
-                concatPath.append(path).append("/");
-                propertyNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, concatPath.toString(), concatPath + propNames, propNames, ZooKeeperUtil.ROLE_USER);
-                if (propertyNode != null) {
-                    propValue = propertyNode.getStrValue();
+
+            for (String propName : propNames) {
+                StringBuffer concatPath = new StringBuffer();
+                for (String path : pathElements) {
+                    concatPath.append(path).append("/");
+                    propertyNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, concatPath.toString(), concatPath + propName, propName, ZooKeeperUtil.ROLE_USER);
+                    if (propertyNode != null) {
+                        propValue = propertyNode.getStrValue();
+                    }
                 }
+                resultOut.append(propName).append("=").append(propValue).append("\n");
             }
+
             response.setContentType("text/plain");
             try (PrintWriter out = response.getWriter()) {
-                out.write(propNames + "=" + propValue + "\n");
+                out.write(resultOut.toString());
             }
 
         } catch (Exception ex) {
