@@ -62,10 +62,10 @@ public class RestAccess extends HttpServlet {
             StringBuilder lookupPath = new StringBuilder(hostsNode.getStrValue());
             //You specify a cluster or an app name to group.
             if (clusterName != null) {
-                lookupPath.append("/").append(clusterName);
+                lookupPath.append("/").append(clusterName).append("/").append(hostName);
             }
             if (appName != null) {
-                lookupPath.append("/").append(appName);
+                lookupPath.append("/").append(appName).append("/").append(hostName);
             }
 
             StringBuffer concatPath = new StringBuffer();
