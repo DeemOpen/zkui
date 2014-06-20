@@ -45,6 +45,10 @@ public class RestAccess extends HttpServlet {
             Properties globalProps = (Properties) this.getServletContext().getAttribute("globalProps");
             String zkServer = globalProps.getProperty("zkServer");
             String[] zkServerLst = zkServer.split(",");
+            String accessRole = ZooKeeperUtil.ROLE_USER;
+            if ((globalProps.getProperty("blockPwdOverRest") != null) && (Boolean.valueOf(globalProps.getProperty("blockPwdOverRest")) == Boolean.FALSE)) {
+                accessRole = ZooKeeperUtil.ROLE_ADMIN;
+            }
 
             String clusterName = request.getParameter("cluster");
             String appName = request.getParameter("app");
@@ -57,7 +61,7 @@ public class RestAccess extends HttpServlet {
             }
             ZooKeeper zk = ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0]);
             //get the path of the hosts entry.
-            LeafBean hostsNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, ZooKeeperUtil.ZK_HOSTS, ZooKeeperUtil.ZK_HOSTS + "/" + hostName, hostName, ZooKeeperUtil.ROLE_USER);
+            LeafBean hostsNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, ZooKeeperUtil.ZK_HOSTS, ZooKeeperUtil.ZK_HOSTS + "/" + hostName, hostName, accessRole);
             StringBuilder lookupPath = new StringBuilder(hostsNode.getStrValue());
             //You specify a cluster or an app name to group.
             if (clusterName != null) {
@@ -67,7 +71,6 @@ public class RestAccess extends HttpServlet {
                 lookupPath.append("/").append(appName).append("/").append(hostName);
             }
 
-            
             StringBuilder resultOut = new StringBuilder();
             LeafBean propertyNode;
             String[] pathElements = lookupPath.toString().split("/");
@@ -76,7 +79,7 @@ public class RestAccess extends HttpServlet {
                 StringBuffer concatPath = new StringBuffer();
                 for (String path : pathElements) {
                     concatPath.append(path).append("/");
-                    propertyNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, concatPath.toString(), concatPath + propName, propName, ZooKeeperUtil.ROLE_USER);
+                    propertyNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, concatPath.toString(), concatPath + propName, propName, accessRole);
                     if (propertyNode != null) {
                         propValue = propertyNode.getStrValue();
                     }
