@@ -136,5 +136,5 @@ License & Contribution
 
 ZKUI is released under the Apache 2.0 license. Comments, bugs, pull requests, and other contributions are all welcomed!
 
-Thanks to : Jozef Krajčovič the creator of the zkui logo.
-http://creativecommons.org/licenses/by/3.0/
+Thanks to Jozef Krajčovič for creating the logo which has been used in the project.
+https://www.iconfinder.com/iconsets/origami-birds
