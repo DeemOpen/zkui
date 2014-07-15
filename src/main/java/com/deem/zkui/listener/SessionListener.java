@@ -17,6 +17,7 @@
  */
 package com.deem.zkui.listener;
 
+import java.util.Arrays;
 import javax.servlet.annotation.WebListener;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
@@ -31,7 +32,7 @@ public class SessionListener implements HttpSessionListener {
 
     @Override
     public void sessionCreated(HttpSessionEvent event) {
-        logger.debug("Session created");
+        logger.trace("Session created");
     }
 
     @Override
@@ -39,9 +40,9 @@ public class SessionListener implements HttpSessionListener {
         try {
             ZooKeeper zk = (ZooKeeper) event.getSession().getAttribute("zk");
             zk.close();
-            logger.debug("Session destroyed");
+            logger.trace("Session destroyed");
         } catch (InterruptedException ex) {
-            logger.error(ex.getMessage());
+            logger.error(Arrays.toString(ex.getStackTrace()));
         }
     }
 

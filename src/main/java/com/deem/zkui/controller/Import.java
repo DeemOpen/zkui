@@ -42,6 +42,7 @@ import org.apache.zookeeper.KeeperException;
 import com.deem.zkui.dao.Dao;
 import com.deem.zkui.utils.ServletUtil;
 import com.deem.zkui.utils.ZooKeeperUtil;
+import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,6 +147,7 @@ public class Import extends HttpServlet {
             request.getSession().setAttribute("flashMsg", "Import Completed!");
             response.sendRedirect("/home");
         } catch (FileUploadException | IOException | InterruptedException | KeeperException ex) {
+            logger.error(Arrays.toString(ex.getStackTrace()));
             ServletUtil.INSTANCE.renderError(request, response, ex.getMessage());
         }
     }

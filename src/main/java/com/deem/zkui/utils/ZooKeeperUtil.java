@@ -32,6 +32,7 @@ import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
 import com.deem.zkui.vo.LeafBean;
+import java.util.Arrays;
 import org.slf4j.LoggerFactory;
 
 public enum ZooKeeperUtil {
@@ -74,7 +75,7 @@ public enum ZooKeeperUtil {
         Set<LeafBean> leaves = new TreeSet<>();
         exportTreeInternal(leaves, ZK_ROOT_NODE, zk, authRole);
         for (LeafBean leaf : leaves) {
-            String leafValue = ServletUtil.INSTANCE.externalizeNodeValue(new String(leaf.getValue()));
+            String leafValue = ServletUtil.INSTANCE.externalizeNodeValue(leaf.getValue());
             if (leaf.getPath().contains(searchString) || leaf.getName().contains(searchString) || leafValue.contains(searchString)) {
                 searchResult.add(leaf);
             }
@@ -85,8 +86,11 @@ public enum ZooKeeperUtil {
 
     public Set<LeafBean> exportTree(String zkPath, ZooKeeper zk, String authRole) throws InterruptedException, KeeperException {
         // 1. Collect nodes
+        long startTime = System.currentTimeMillis();
         Set<LeafBean> leaves = new TreeSet<>();
         exportTreeInternal(leaves, zkPath, zk, authRole);
+        long estimatedTime = System.currentTimeMillis() - startTime;
+        logger.trace("Elapsed Time in Secs for Export: " + estimatedTime / 1000);
         return leaves;
     }
 

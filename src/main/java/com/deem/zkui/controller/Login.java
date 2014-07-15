@@ -38,6 +38,7 @@ import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.deem.zkui.utils.LdapAuth;
+import java.util.Arrays;
 
 @SuppressWarnings("serial")
 @WebServlet(urlPatterns = {"/login"})
@@ -55,6 +56,7 @@ public class Login extends HttpServlet {
             templateParam.put("loginMessage", globalProps.getProperty("loginMessage"));
             ServletUtil.INSTANCE.renderHtml(request, response, templateParam, "login.ftl.html");
         } catch (TemplateException ex) {
+            logger.error(Arrays.toString(ex.getStackTrace()));
             ServletUtil.INSTANCE.renderError(request, response, ex.getMessage());
         }
 
@@ -113,6 +115,7 @@ public class Login extends HttpServlet {
             }
 
         } catch (ParseException | TemplateException ex) {
+            logger.error(Arrays.toString(ex.getStackTrace()));
             ServletUtil.INSTANCE.renderError(request, response, ex.getMessage());
         }
     }

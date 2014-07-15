@@ -17,18 +17,22 @@
  */
 package com.deem.zkui.controller;
 
+import com.deem.zkui.utils.ServletUtil;
+import com.deem.zkui.utils.ZooKeeperUtil;
+import com.deem.zkui.vo.LeafBean;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
-import com.deem.zkui.utils.ServletUtil;
-import com.deem.zkui.utils.ZooKeeperUtil;
-import com.deem.zkui.vo.LeafBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,12 +53,13 @@ public class RestAccess extends HttpServlet {
             if ((globalProps.getProperty("blockPwdOverRest") != null) && (Boolean.valueOf(globalProps.getProperty("blockPwdOverRest")) == Boolean.FALSE)) {
                 accessRole = ZooKeeperUtil.ROLE_ADMIN;
             }
-
+            StringBuilder resultOut = new StringBuilder();
             String clusterName = request.getParameter("cluster");
             String appName = request.getParameter("app");
             String hostName = request.getParameter("host");
             String[] propNames = request.getParameterValues("propNames");
             String propValue = "";
+            LeafBean propertyNode;
 
             if (hostName == null) {
                 hostName = ServletUtil.INSTANCE.getRemoteAddr(request);
@@ -62,29 +67,71 @@ public class RestAccess extends HttpServlet {
             ZooKeeper zk = ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0]);
             //get the path of the hosts entry.
             LeafBean hostsNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, ZooKeeperUtil.ZK_HOSTS, ZooKeeperUtil.ZK_HOSTS + "/" + hostName, hostName, accessRole);
-            StringBuilder lookupPath = new StringBuilder(hostsNode.getStrValue());
-            //You specify a cluster or an app name to group.
-            if (clusterName != null) {
-                lookupPath.append("/").append(clusterName).append("/").append(hostName);
-            }
-            if (appName != null) {
-                lookupPath.append("/").append(appName).append("/").append(hostName);
-            }
+            String lookupPath = hostsNode.getStrValue();
 
-            StringBuilder resultOut = new StringBuilder();
-            LeafBean propertyNode;
-            String[] pathElements = lookupPath.toString().split("/");
+            List<String> searchPath = new ArrayList<>();
+            searchPath.add(lookupPath);
+
+            //You specify a cluster or an app name to group.
+            if (clusterName != null && appName == null) {
+                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + hostName, zk)) {
+                    searchPath.add(lookupPath + "/" + hostName);
+                }
+                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + clusterName, zk)) {
+                    searchPath.add(lookupPath + "/" + clusterName);
+                }
+                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + clusterName + "/" + hostName, zk)) {
+                    searchPath.add(lookupPath + "/" + clusterName + "/" + hostName);
+                }
+
+            } else if (appName != null && clusterName == null) {
+                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + hostName, zk)) {
+                    searchPath.add(lookupPath + "/" + hostName);
+                }
+                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + appName, zk)) {
+                    searchPath.add(lookupPath + "/" + appName);
+                }
+                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + appName + "/" + hostName, zk)) {
+                    searchPath.add(lookupPath + "/" + appName + "/" + hostName);
+                }
+
+            } else if (appName != null && clusterName != null) {
+                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + hostName, zk)) {
+                    searchPath.add(lookupPath + "/" + hostName);
+                }
+                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + clusterName, zk)) {
+                    searchPath.add(lookupPath + "/" + clusterName);
+                }
+                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + clusterName + "/" + hostName, zk)) {
+                    searchPath.add(lookupPath + "/" + clusterName + "/" + hostName);
+                }
+                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + appName, zk)) {
+                    searchPath.add(lookupPath + "/" + appName);
+                }
+                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + appName + "/" + hostName, zk)) {
+                    searchPath.add(lookupPath + "/" + appName + "/" + hostName);
+                }
+                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + clusterName + "/" + appName, zk)) {
+                    searchPath.add(lookupPath + "/" + clusterName + "/" + appName);
+                }
+                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + clusterName + "/" + appName + "/" + hostName, zk)) {
+                    searchPath.add(lookupPath + "/" + clusterName + "/" + appName + "/" + hostName);
+                }
+
+            }
 
             for (String propName : propNames) {
-                StringBuffer concatPath = new StringBuffer();
-                for (String path : pathElements) {
-                    concatPath.append(path).append("/");
-                    propertyNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, concatPath.toString(), concatPath + propName, propName, accessRole);
+                propValue = "";
+                for (String path : searchPath) {
+                    //logger.debug("Looking up " + path);
+                    propertyNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, path, path + "/" + propName, propName, accessRole);
                     if (propertyNode != null) {
                         propValue = propertyNode.getStrValue();
                     }
                 }
-                resultOut.append(propName).append("=").append(propValue).append("\n");
+                if (!propValue.equals("")) {
+                    resultOut.append(propName).append("=").append(propValue).append("\n");
+                }
             }
 
             response.setContentType("text/plain");
@@ -92,7 +139,8 @@ public class RestAccess extends HttpServlet {
                 out.write(resultOut.toString());
             }
 
-        } catch (Exception ex) {
+        } catch (KeeperException | InterruptedException ex) {
+            logger.error(Arrays.toString(ex.getStackTrace()));
             ServletUtil.INSTANCE.renderError(request, response, ex.getMessage());
         }
 

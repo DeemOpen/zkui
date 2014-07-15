@@ -39,7 +39,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        logger.info("Starting ZKUI!");
+        logger.debug("Starting ZKUI!");
         Properties globalProps = new Properties();
         File f = new File("config.cfg");
         if (f.exists()) {

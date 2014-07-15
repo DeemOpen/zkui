@@ -19,6 +19,7 @@ package com.deem.zkui.dao;
 
 import com.deem.zkui.domain.History;
 import com.googlecode.flyway.core.Flyway;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -87,7 +88,7 @@ public class Dao {
             history.save();
             this.close();
         } catch (Exception ex) {
-            logger.error(ex.getMessage());
+            logger.error(Arrays.toString(ex.getStackTrace()));
         }
 
     }

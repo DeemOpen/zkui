@@ -30,6 +30,7 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public enum ServletUtil {
@@ -85,7 +86,7 @@ public enum ServletUtil {
                 out.flush();
             }
         } catch (TemplateException | IOException ex) {
-            logger.error(ex.getMessage());
+            logger.error(Arrays.toString(ex.getStackTrace()));
         }
 
     }
@@ -106,13 +107,13 @@ public enum ServletUtil {
             }
             return zk;
         } catch (IOException | InterruptedException ex) {
-            logger.error(ex.getMessage());
+            logger.error(Arrays.toString(ex.getStackTrace()));
         }
         return null;
     }
 
-    public String externalizeNodeValue(String value) {
-        return value == null ? null : value.replaceAll("\\n", "\\\\n").replaceAll("\\r", "");
+    public String externalizeNodeValue(byte[] value) {
+        return value == null ? "" : new String(value).replaceAll("\\n", "\\\\n").replaceAll("\\r", "");
         // We might want to BASE64 encode it
     }
 

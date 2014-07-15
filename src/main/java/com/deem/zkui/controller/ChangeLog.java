@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.deem.zkui.dao.Dao;
 import com.deem.zkui.domain.History;
 import com.deem.zkui.utils.ServletUtil;
+import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +53,7 @@ public class ChangeLog extends HttpServlet {
             templateParam.put("historyNode", "");
             ServletUtil.INSTANCE.renderHtml(request, response, templateParam, "history.ftl.html");
         } catch (TemplateException ex) {
+            logger.error(Arrays.toString(ex.getStackTrace()));
             ServletUtil.INSTANCE.renderError(request, response, ex.getMessage());
         }
 
@@ -78,6 +80,7 @@ public class ChangeLog extends HttpServlet {
                 response.sendRedirect("/history");
             }
         } catch (TemplateException ex) {
+            logger.error(Arrays.toString(ex.getStackTrace()));
             ServletUtil.INSTANCE.renderError(request, response, ex.getMessage());
         }
     }

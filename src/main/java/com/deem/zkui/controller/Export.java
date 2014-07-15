@@ -31,16 +31,16 @@ import org.apache.zookeeper.KeeperException;
 import com.deem.zkui.utils.ServletUtil;
 import com.deem.zkui.utils.ZooKeeperUtil;
 import com.deem.zkui.vo.LeafBean;
+import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 @SuppressWarnings("serial")
 @WebServlet(urlPatterns = {"/export"})
 public class Export extends HttpServlet {
-
+    
     private final static Logger logger = LoggerFactory.getLogger(Export.class);
-
+    
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         logger.debug("Export Get Action!");
@@ -48,7 +48,7 @@ public class Export extends HttpServlet {
             Properties globalProps = (Properties) this.getServletContext().getAttribute("globalProps");
             String zkServer = globalProps.getProperty("zkServer");
             String[] zkServerLst = zkServer.split(",");
-
+            
             String authRole = (String) request.getSession().getAttribute("authRole");
             if (authRole == null) {
                 authRole = ZooKeeperUtil.ROLE_USER;
@@ -58,14 +58,15 @@ public class Export extends HttpServlet {
             output.append("#App Config Dashboard (ACD) dump created on :").append(new Date()).append("\n");
             Set<LeafBean> leaves = ZooKeeperUtil.INSTANCE.exportTree(zkPath, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0]), authRole);
             for (LeafBean leaf : leaves) {
-                output.append(leaf.getPath()).append('=').append(leaf.getName()).append('=').append(ServletUtil.INSTANCE.externalizeNodeValue(new String(leaf.getValue()))).append('\n');
+                output.append(leaf.getPath()).append('=').append(leaf.getName()).append('=').append(ServletUtil.INSTANCE.externalizeNodeValue(leaf.getValue())).append('\n');
             }// for all leaves
             response.setContentType("text/plain");
             try (PrintWriter out = response.getWriter()) {
                 out.write(output.toString());
             }
-
+            
         } catch (InterruptedException | KeeperException ex) {
+            logger.error(Arrays.toString(ex.getStackTrace()));
             ServletUtil.INSTANCE.renderError(request, response, ex.getMessage());
         }
     }

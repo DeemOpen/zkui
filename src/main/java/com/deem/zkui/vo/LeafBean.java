@@ -18,6 +18,7 @@
 package com.deem.zkui.vo;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +65,7 @@ public class LeafBean implements Comparable<LeafBean> {
         try {
             return new String(this.value, "UTF-8");
         } catch (UnsupportedEncodingException ex) {
-            logger.error(ex.getMessage());
+            logger.error(Arrays.toString(ex.getStackTrace()));
         }
         return null;
     }

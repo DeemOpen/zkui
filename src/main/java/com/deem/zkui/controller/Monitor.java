@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import com.deem.zkui.utils.CmdUtil;
 import com.deem.zkui.utils.ServletUtil;
+import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +59,7 @@ public class Monitor extends HttpServlet {
             ServletUtil.INSTANCE.renderHtml(request, response, templateParam, "monitor.ftl.html");
 
         } catch (IOException | InterruptedException | TemplateException ex) {
+            logger.error(Arrays.toString(ex.getStackTrace()));
             ServletUtil.INSTANCE.renderError(request, response, ex.getMessage());
         }
     }
