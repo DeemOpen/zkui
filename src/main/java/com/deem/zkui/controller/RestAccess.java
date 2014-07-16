@@ -68,9 +68,18 @@ public class RestAccess extends HttpServlet {
             //get the path of the hosts entry.
             LeafBean hostsNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, ZooKeeperUtil.ZK_HOSTS, ZooKeeperUtil.ZK_HOSTS + "/" + hostName, hostName, accessRole);
             String lookupPath = hostsNode.getStrValue();
+            logger.trace("Root Path:" + lookupPath);
+            String[] pathElements = lookupPath.split("/");
 
+            //Form all combinations of search path you want to look up the property in.
             List<String> searchPath = new ArrayList<>();
-            searchPath.add(lookupPath);
+
+            StringBuilder pathSubSet = new StringBuilder();
+            for (String pathElement : pathElements) {
+                pathSubSet.append(pathElement);
+                pathSubSet.append("/");
+                searchPath.add(pathSubSet.substring(0, pathSubSet.length() - 1));
+            }
 
             //You specify a cluster or an app name to group.
             if (clusterName != null && appName == null) {
@@ -85,6 +94,7 @@ public class RestAccess extends HttpServlet {
                 }
 
             } else if (appName != null && clusterName == null) {
+
                 if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + hostName, zk)) {
                     searchPath.add(lookupPath + "/" + hostName);
                 }
@@ -120,10 +130,11 @@ public class RestAccess extends HttpServlet {
 
             }
 
+            //Search the property in all lookup paths.
             for (String propName : propNames) {
                 propValue = "";
                 for (String path : searchPath) {
-                    //logger.debug("Looking up " + path);
+                    logger.trace("Looking up " + path);
                     propertyNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, path, path + "/" + propName, propName, accessRole);
                     if (propertyNode != null) {
                         propValue = propertyNode.getStrValue();
