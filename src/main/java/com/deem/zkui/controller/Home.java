@@ -137,7 +137,7 @@ public class Home extends HttpServlet {
                     response.sendRedirect("/home?zkPath=" + displayPath);
                     break;
                 case "Save Property":
-                    if (!newProperty.equals("") && !newValue.equals("") && !currentPath.equals("") && authRole.equals(ZooKeeperUtil.ROLE_ADMIN)) {
+                    if (!newProperty.equals("") && !currentPath.equals("") && authRole.equals(ZooKeeperUtil.ROLE_ADMIN)) {
                         //Save the new node.
                         ZooKeeperUtil.INSTANCE.createNode(currentPath, newProperty, newValue, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0]));
                         request.getSession().setAttribute("flashMsg", "Property Saved!");

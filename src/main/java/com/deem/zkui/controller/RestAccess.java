@@ -132,7 +132,7 @@ public class RestAccess extends HttpServlet {
 
             //Search the property in all lookup paths.
             for (String propName : propNames) {
-                propValue = "";
+                propValue = null;
                 for (String path : searchPath) {
                     logger.trace("Looking up " + path);
                     propertyNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, path, path + "/" + propName, propName, accessRole);
@@ -140,9 +140,10 @@ public class RestAccess extends HttpServlet {
                         propValue = propertyNode.getStrValue();
                     }
                 }
-                if (!propValue.equals("")) {
+                if (propValue != null) {
                     resultOut.append(propName).append("=").append(propValue).append("\n");
                 }
+
             }
 
             response.setContentType("text/plain");

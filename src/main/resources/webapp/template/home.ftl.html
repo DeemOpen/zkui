@@ -78,7 +78,11 @@
                             </td>
                             <td>
                                 <#if authRole?? && authRole == 'ADMIN' >
+                                <#if leaf.value??>
                                 <a href="#" data-toggle="modal" class="href-select" data-target="#addPropertyModal" itemprop="${leaf.strValue?html}" >${leaf.name}</a> 
+                                <#else>
+                                <a href="#" data-toggle="modal" class="href-select" data-target="#addPropertyModal" itemprop="" >${leaf.name}</a> 
+                                </#if>
                                 <#else>
                                 ${leaf.name}
                                 </#if>
@@ -86,7 +90,11 @@
                             <#if navigate?? && navigate == 'true'>
                             <td><a href="/home?zkPath=${leaf.strValue}">${leaf.strValue}</a></td>
                             <#else>
-                            <td>${leaf.strValue}</td>
+                            <td>
+                                <#if leaf.value??>
+                                ${leaf.strValue}
+                                </#if>
+                            </td>
                             </#if>
 
                         </tr>
