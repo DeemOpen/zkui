@@ -92,7 +92,7 @@
                             <#else>
                             <td>
                                 <#if leaf.value??>
-                                ${leaf.strValue}
+                                ${leaf.strValue?html}
                                 </#if>
                             </td>
                             </#if>
