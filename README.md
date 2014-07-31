@@ -51,7 +51,7 @@ Import File Format
 ====================
 #add property
 /appconfig/path=property=value
-#remove a propery
+#remove a property
 -/path/property
 
 You can either upload a file or specify a http url of the version control system that way all your zookeeper changes will be in version control. 
