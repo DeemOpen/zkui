@@ -32,7 +32,6 @@ import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
 import com.deem.zkui.vo.LeafBean;
-import java.util.Arrays;
 import org.slf4j.LoggerFactory;
 
 public enum ZooKeeperUtil {

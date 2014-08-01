@@ -95,6 +95,26 @@ A shell script will call this via
 MY_PROPERTY="$(curl -f -s -S -k "http://localhost:9090/acd/appconfig?propNames=foo&host=`hostname -f`" | cut -d '=' -f 2)"
 echo $MY_PROPERTY
 
+Standardization
+====================
+Zookeeper doesnt enforce any order in which properties are stored and retrieved. ZKUI however organizes properties in the following manner for easy lookup.
+Each server/box has its hostname listed under /appconfig/hosts and that points to the path where properties reside for that path. So when the lookup for a property occurs over a rest call it first finds the hostname entry under /appconfig/hosts and then looks for that property in the location mentioned.
+eg: /appconfig/hosts/myserver.com=/appconfig/dev/app1 
+This means that when myserver.com tries to lookup the propery it looks under /appconfig/dev/app1
+
+You can also append app name to make lookup easy.
+eg: /appconfig/hosts/myserver.com:testapp=/appconfig/dev/test/app1 
+eg: /appconfig/hosts/myserver.com:prodapp=/appconfig/dev/prod/app1
+
+Lookup can be done by grouping of app and cluster. A cluster can have many apps under it. When the bootloader entry looks like this /appconfig/hosts/myserver.com=/appconfig/dev the rest lookup happens on the following paths.
+/appconfig/dev/..
+/appconfig/dev/hostname..
+/appconfig/dev/app..
+/appconfig/dev/cluster..
+/appconfig/dev/cluster/app..
+
+This standardization is only needed if you choose to use the rest lookup. You can use zkui to update properties in general without worry about this organizing structure.
+
 Limitations
 ====================
 1. ACLs are not yet fully supported

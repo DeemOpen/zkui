@@ -66,7 +66,14 @@ public class RestAccess extends HttpServlet {
             }
             ZooKeeper zk = ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0]);
             //get the path of the hosts entry.
-            LeafBean hostsNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, ZooKeeperUtil.ZK_HOSTS, ZooKeeperUtil.ZK_HOSTS + "/" + hostName, hostName, accessRole);
+            LeafBean hostsNode = null;
+            //If app name is mentioned then lookup path is appended with it.
+            if (appName != null && ZooKeeperUtil.INSTANCE.nodeExists(ZooKeeperUtil.ZK_HOSTS + "/" + hostName + ":" + appName, zk)) {
+                hostsNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, ZooKeeperUtil.ZK_HOSTS, ZooKeeperUtil.ZK_HOSTS + "/" + hostName + ":" + appName, hostName + ":" + appName, accessRole);
+            } else {
+                hostsNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, ZooKeeperUtil.ZK_HOSTS, ZooKeeperUtil.ZK_HOSTS + "/" + hostName, hostName, accessRole);
+            }
+
             String lookupPath = hostsNode.getStrValue();
             logger.trace("Root Path:" + lookupPath);
             String[] pathElements = lookupPath.split("/");
@@ -106,20 +113,22 @@ public class RestAccess extends HttpServlet {
                 }
 
             } else if (appName != null && clusterName != null) {
+                //Order in which these paths are listed is important as the lookup happens in that order.
+                //Precedence is give to cluster over app.
                 if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + hostName, zk)) {
                     searchPath.add(lookupPath + "/" + hostName);
-                }
-                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + clusterName, zk)) {
-                    searchPath.add(lookupPath + "/" + clusterName);
-                }
-                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + clusterName + "/" + hostName, zk)) {
-                    searchPath.add(lookupPath + "/" + clusterName + "/" + hostName);
                 }
                 if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + appName, zk)) {
                     searchPath.add(lookupPath + "/" + appName);
                 }
                 if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + appName + "/" + hostName, zk)) {
                     searchPath.add(lookupPath + "/" + appName + "/" + hostName);
+                }
+                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + clusterName, zk)) {
+                    searchPath.add(lookupPath + "/" + clusterName);
+                }
+                if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + clusterName + "/" + hostName, zk)) {
+                    searchPath.add(lookupPath + "/" + clusterName + "/" + hostName);
                 }
                 if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + clusterName + "/" + appName, zk)) {
                     searchPath.add(lookupPath + "/" + clusterName + "/" + appName);
