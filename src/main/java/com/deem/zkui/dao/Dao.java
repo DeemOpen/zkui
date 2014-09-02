@@ -27,44 +27,48 @@ import org.javalite.activejdbc.Base;
 import org.slf4j.LoggerFactory;
 
 public class Dao {
-
+    
     private final static Integer FETCH_LIMIT = 50;
     private final static org.slf4j.Logger logger = LoggerFactory.getLogger(Dao.class);
     private final Properties globalProps;
-
+    
     public Dao(Properties globalProps) {
         this.globalProps = globalProps;
     }
-
+    
     public void open() {
         Base.open(globalProps.getProperty("jdbcClass"), globalProps.getProperty("jdbcUrl"), globalProps.getProperty("jdbcUser"), globalProps.getProperty("jdbcPwd"));
     }
-
+    
     public void close() {
         Base.close();
     }
-
+    
     public void checkNCreate() {
-
-        Flyway flyway = new Flyway();
-        flyway.setDataSource(globalProps.getProperty("jdbcUrl"), globalProps.getProperty("jdbcUser"), globalProps.getProperty("jdbcPwd"));
-        //Will wipe db each time. Avoid this in prod.
-        if (globalProps.getProperty("env").equals("dev")) {
-            flyway.clean();
+        try {
+            Flyway flyway = new Flyway();
+            flyway.setDataSource(globalProps.getProperty("jdbcUrl"), globalProps.getProperty("jdbcUser"), globalProps.getProperty("jdbcPwd"));
+            //Will wipe db each time. Avoid this in prod.
+            if (globalProps.getProperty("env").equals("dev")) {
+                flyway.clean();
+            }
+            //Remove the above line if deploying to prod.
+            flyway.migrate();
+        } catch (Exception ex) {
+            logger.error("Error trying to migrate db! Not severe hence proceeding forward.");
         }
-        //Remove the above line if deploying to prod.
-        flyway.migrate();
+        
     }
-
+    
     public List<History> fetchHistoryRecords() {
         this.open();
         List<History> history = History.findAll().orderBy("ID desc").limit(FETCH_LIMIT);
         history.size();
         this.close();
         return history;
-
+        
     }
-
+    
     public List<History> fetchHistoryRecordsByNode(String historyNode) {
         this.open();
         List<History> history = History.where("CHANGE_SUMMARY like ?", historyNode).orderBy("ID desc").limit(FETCH_LIMIT);
@@ -72,7 +76,7 @@ public class Dao {
         this.close();
         return history;
     }
-
+    
     public void insertHistory(String user, String ipAddress, String summary) {
         try {
             this.open();
@@ -90,6 +94,6 @@ public class Dao {
         } catch (Exception ex) {
             logger.error(Arrays.toString(ex.getStackTrace()));
         }
-
+        
     }
 }
