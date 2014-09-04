@@ -39,12 +39,13 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("serial")
 @WebServlet(urlPatterns = {"/acd/appconfig"})
 public class RestAccess extends HttpServlet {
-
+    
     private final static Logger logger = LoggerFactory.getLogger(RestAccess.class);
-
+    
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         logger.debug("Rest Action!");
+        ZooKeeper zk = null;
         try {
             Properties globalProps = (Properties) this.getServletContext().getAttribute("globalProps");
             String zkServer = globalProps.getProperty("zkServer");
@@ -60,11 +61,11 @@ public class RestAccess extends HttpServlet {
             String[] propNames = request.getParameterValues("propNames");
             String propValue = "";
             LeafBean propertyNode;
-
+            
             if (hostName == null) {
                 hostName = ServletUtil.INSTANCE.getRemoteAddr(request);
             }
-            ZooKeeper zk = ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0]);
+            zk = ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0]);
             //get the path of the hosts entry.
             LeafBean hostsNode = null;
             //If app name is mentioned then lookup path is appended with it.
@@ -73,14 +74,14 @@ public class RestAccess extends HttpServlet {
             } else {
                 hostsNode = ZooKeeperUtil.INSTANCE.getNodeValue(zk, ZooKeeperUtil.ZK_HOSTS, ZooKeeperUtil.ZK_HOSTS + "/" + hostName, hostName, accessRole);
             }
-
+            
             String lookupPath = hostsNode.getStrValue();
             logger.trace("Root Path:" + lookupPath);
             String[] pathElements = lookupPath.split("/");
 
             //Form all combinations of search path you want to look up the property in.
             List<String> searchPath = new ArrayList<>();
-
+            
             StringBuilder pathSubSet = new StringBuilder();
             for (String pathElement : pathElements) {
                 pathSubSet.append(pathElement);
@@ -99,9 +100,9 @@ public class RestAccess extends HttpServlet {
                 if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + clusterName + "/" + hostName, zk)) {
                     searchPath.add(lookupPath + "/" + clusterName + "/" + hostName);
                 }
-
+                
             } else if (appName != null && clusterName == null) {
-
+                
                 if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + hostName, zk)) {
                     searchPath.add(lookupPath + "/" + hostName);
                 }
@@ -111,7 +112,7 @@ public class RestAccess extends HttpServlet {
                 if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + appName + "/" + hostName, zk)) {
                     searchPath.add(lookupPath + "/" + appName + "/" + hostName);
                 }
-
+                
             } else if (appName != null && clusterName != null) {
                 //Order in which these paths are listed is important as the lookup happens in that order.
                 //Precedence is give to cluster over app.
@@ -136,7 +137,7 @@ public class RestAccess extends HttpServlet {
                 if (ZooKeeperUtil.INSTANCE.nodeExists(lookupPath + "/" + clusterName + "/" + appName + "/" + hostName, zk)) {
                     searchPath.add(lookupPath + "/" + clusterName + "/" + appName + "/" + hostName);
                 }
-
+                
             }
 
             //Search the property in all lookup paths.
@@ -152,18 +153,22 @@ public class RestAccess extends HttpServlet {
                 if (propValue != null) {
                     resultOut.append(propName).append("=").append(propValue).append("\n");
                 }
-
+                
             }
-
+            
             response.setContentType("text/plain");
             try (PrintWriter out = response.getWriter()) {
                 out.write(resultOut.toString());
             }
-
+            
         } catch (KeeperException | InterruptedException ex) {
             logger.error(Arrays.toString(ex.getStackTrace()));
             ServletUtil.INSTANCE.renderError(request, response, ex.getMessage());
+        } finally {
+            if (zk != null) {
+                ServletUtil.INSTANCE.closeZookeeper(zk);
+            }
         }
-
+        
     }
 }
