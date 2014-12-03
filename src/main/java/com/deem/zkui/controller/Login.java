@@ -18,26 +18,33 @@
 package com.deem.zkui.controller;
 
 import freemarker.template.TemplateException;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
 import com.deem.zkui.utils.ServletUtil;
 import com.deem.zkui.utils.ZooKeeperUtil;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.deem.zkui.utils.LdapAuth;
+
 import java.util.Arrays;
 
 @SuppressWarnings("serial")
@@ -74,10 +81,16 @@ public class Login extends HttpServlet {
             String username = request.getParameter("username");
             String password = request.getParameter("password");
             String role = null;
-            Boolean authenticated = false;
+            List<String> authenticatedGroups = null;
+            boolean authenticated = false;
             //if ldap is provided then it overrides roleset.
             if (globalProps.getProperty("ldapAuth").equals("true")) {
-                authenticated = new LdapAuth().authenticateUser(globalProps.getProperty("ldapUrl"), username, password, globalProps.getProperty("ldapDomain"));
+                authenticatedGroups = new LdapAuth().authenticateUserAndReturnGroups(globalProps.getProperty("ldapUrl"), username, password,
+                  globalProps.getProperty("ldapDomain"), globalProps.getProperty("ldapPrincipalTemplate"),
+                  globalProps.getProperty("ldapGroupsToTest"), globalProps.getProperty("ldapGroupMatchAttrId"),
+                  globalProps.getProperty("ldapGroupSearchBase"));
+                authenticated = (authenticatedGroups != null);
+                logger.info("Authentication for user " + username + " in groups " + authenticatedGroups);
                 if (authenticated) {
                     JSONArray jsonRoleSet = (JSONArray) ((JSONObject) new JSONParser().parse(globalProps.getProperty("ldapRoleSet"))).get("users");
                     for (Iterator it = jsonRoleSet.iterator(); it.hasNext();) {
@@ -89,10 +102,32 @@ public class Login extends HttpServlet {
                             role = (String) jsonUser.get("role");
                         }
                     }
+                    if (globalProps.getProperty("ldapGroupsToTest") != null && globalProps.getProperty("ldapGroupsToTest").trim().length() > 0) {
+                        // If group membership is required, then the user must be a member of one of the groups
+                        // This allows a configuration in which not every LDAP user is allowed to access zookeeper
+                        if (authenticatedGroups.size() == 0) {
+                            logger.info("User mathed no groups, but groups were expected. Rejecting login");
+                            authenticated = false;
+                        } else {
+                            JSONArray jsonGroupRoleSet =
+                                    (JSONArray) ((JSONObject) new JSONParser().parse(globalProps.getProperty("ldapGroupRoleSet"))).get("groups");
+                            groupRoleLoop: for (Iterator it = jsonGroupRoleSet.iterator(); it.hasNext();) {
+                                JSONObject jsonGroupRole = (JSONObject) it.next();
+                                if (jsonGroupRole.get("gruopname") != null) {
+                                    for (String group : authenticatedGroups) {
+                                        if (jsonGroupRole.get("gruopname").equals(group)) {
+                                            role = (String) jsonGroupRole.get("role");
+                                            // First one wins
+                                            break groupRoleLoop;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     if (role == null) {
                         role = ZooKeeperUtil.ROLE_USER;
                     }
-
                 }
             } else {
                 JSONArray jsonRoleSet = (JSONArray) ((JSONObject) new JSONParser().parse(globalProps.getProperty("userSet"))).get("users");
