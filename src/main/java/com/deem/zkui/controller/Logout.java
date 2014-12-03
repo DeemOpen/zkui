@@ -43,7 +43,7 @@ public class Logout extends HttpServlet {
             Properties globalProps = (Properties) getServletContext().getAttribute("globalProps");
             String zkServer = globalProps.getProperty("zkServer");
             String[] zkServerLst = zkServer.split(",");
-            ZooKeeper zk = ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0]);
+            ZooKeeper zk = ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps);
             request.getSession().invalidate();
             zk.close();
             response.sendRedirect("/login");

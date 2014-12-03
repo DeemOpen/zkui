@@ -113,9 +113,9 @@ public class Login extends HttpServlet {
                                     (JSONArray) ((JSONObject) new JSONParser().parse(globalProps.getProperty("ldapGroupRoleSet"))).get("groups");
                             groupRoleLoop: for (Iterator it = jsonGroupRoleSet.iterator(); it.hasNext();) {
                                 JSONObject jsonGroupRole = (JSONObject) it.next();
-                                if (jsonGroupRole.get("gruopname") != null) {
+                                if (jsonGroupRole.get("groupname") != null) {
                                     for (String group : authenticatedGroups) {
-                                        if (jsonGroupRole.get("gruopname").equals(group)) {
+                                        if (jsonGroupRole.get("groupname").equals(group)) {
                                             role = (String) jsonGroupRole.get("role");
                                             // First one wins
                                             break groupRoleLoop;
