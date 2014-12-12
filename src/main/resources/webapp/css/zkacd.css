@@ -48,6 +48,8 @@ body {
     background-color: #f5f5f5;
 }
 
+table { table-layout: fixed; }
+table td { word-wrap: break-word; }
 /* Custom page CSS
 -------------------------------------------------- */
 /* Not required for template or sticky footer method. */
