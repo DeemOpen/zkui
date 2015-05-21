@@ -37,13 +37,30 @@ public class Main {
 
     private final static org.slf4j.Logger logger = LoggerFactory.getLogger(Main.class);
 
+    private static final String ENV_CONFIG_FILE = "CONFIG_FILE";
+
     public static void main(String[] args) throws Exception {
 
         logger.debug("Starting ZKUI!");
+
         Properties globalProps = new Properties();
-        File f = new File("config.cfg");
-        if (f.exists()) {
-            globalProps.load(new FileInputStream("config.cfg"));
+        File f;
+        logger.debug("Try to find config file in env variable or system properties:  {}", ENV_CONFIG_FILE);
+        // try by env
+        String envVarForConfig = System.getenv(ENV_CONFIG_FILE);
+        String propsForConfig = System.getProperty(ENV_CONFIG_FILE);
+        logger.debug("envVarForConfig:  {}", envVarForConfig);
+        logger.debug("propsForConfig:  {}", propsForConfig);
+        if (envVarForConfig != null) { // try to find in system environment variable
+            f = new File(envVarForConfig);
+        } else if (propsForConfig != null) { // try to find in system properties
+            f = new File(propsForConfig);
+        } else { // try in current directory
+            f = new File("config.cfg");
+        }
+
+        if (f != null && f.exists()) {
+            globalProps.load(new FileInputStream(f));
         } else {
             System.out.println("Please create config.cfg properties file and then execute the program!");
             System.exit(1);
