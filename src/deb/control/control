@@ -1,0 +1,9 @@
+Package: zookeeper-ui
+Version: [[version]]
+Section: java
+Priority: extra
+Maintainer: System team <sys@yourcompany.com>
+Architecture: amd64
+Depends:
+Conflicts:
+Description: Zookeeper UI

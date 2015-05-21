@@ -1,0 +1,6 @@
+#! /bin/bash
+
+mkdir -p /var/log/zookeeper
+chown zookeeper:zookeeper /var/log/zookeeper
+
+service zookeeper-ui start
