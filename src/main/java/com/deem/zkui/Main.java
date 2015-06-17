@@ -23,11 +23,19 @@ import java.io.FileInputStream;
 import java.util.Date;
 import java.util.Properties;
 import org.eclipse.jetty.annotations.AnnotationConfiguration;
+import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.Configuration.ClassList;
 import org.eclipse.jetty.webapp.JettyWebXmlConfiguration;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -53,7 +61,7 @@ public class Main {
         new Dao(globalProps).checkNCreate();
 
         String webFolder = "webapp";
-        Server server = new Server(Integer.parseInt(globalProps.getProperty("serverPort")));
+        Server server = new Server();
 
         WebAppContext servletContextHandler = new WebAppContext();
         servletContextHandler.setContextPath("/");
@@ -75,6 +83,27 @@ public class Main {
         handlers.setHandlers(new Handler[]{staticResourceHandler, servletContextHandler});
 
         server.setHandler(handlers);
+        HttpConfiguration http_config = new HttpConfiguration();
+        http_config.setSecureScheme("https");
+        http_config.setSecurePort(Integer.parseInt(globalProps.getProperty("serverPort")));
+        
+        if (globalProps.getProperty("https").equals("true")) {
+            File keystoreFile = new File(globalProps.getProperty("keystoreFile"));
+            SslContextFactory sslContextFactory = new SslContextFactory();
+            sslContextFactory.setKeyStorePath(keystoreFile.getAbsolutePath());
+            sslContextFactory.setKeyStorePassword(globalProps.getProperty("keystorePwd"));
+            sslContextFactory.setKeyManagerPassword(globalProps.getProperty("keystoreManagerPwd"));
+            HttpConfiguration https_config = new HttpConfiguration(http_config);
+            https_config.addCustomizer(new SecureRequestCustomizer());
+
+            ServerConnector https = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString()), new HttpConnectionFactory(https_config));
+            https.setPort(Integer.parseInt(globalProps.getProperty("serverPort")));
+            server.setConnectors(new Connector[]{https});
+        } else {
+            ServerConnector http = new ServerConnector(server, new HttpConnectionFactory(http_config));
+            http.setPort(Integer.parseInt(globalProps.getProperty("serverPort")));
+            server.setConnectors(new Connector[]{http});
+        }
 
         server.start();
         server.join();

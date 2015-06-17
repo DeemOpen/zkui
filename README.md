@@ -115,6 +115,12 @@ Lookup can be done by grouping of app and cluster. A cluster can have many apps 
 
 This standardization is only needed if you choose to use the rest lookup. You can use zkui to update properties in general without worry about this organizing structure.
 
+HTTPS
+====================
+You can enable https if needed. 
+keytool -keystore keystore -alias jetty -genkey -keyalg RSA
+
+
 Limitations
 ====================
 1. ACLs are not yet fully supported
