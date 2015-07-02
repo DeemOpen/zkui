@@ -58,7 +58,7 @@ public class Monitor extends HttpServlet {
             templateParam.put("stats", stats);
             ServletUtil.INSTANCE.renderHtml(request, response, templateParam, "monitor.ftl.html");
 
-        } catch (IOException | InterruptedException | TemplateException ex) {
+        } catch (IOException | TemplateException ex) {
             logger.error(Arrays.toString(ex.getStackTrace()));
             ServletUtil.INSTANCE.renderError(request, response, ex.getMessage());
         }
