@@ -31,20 +31,17 @@ public enum CmdUtil {
     private final static Logger logger = LoggerFactory.getLogger(CmdUtil.class);
 
     public String executeCmd(String cmd, String zkServer, String zkPort) throws IOException {
-        Socket s = new Socket(zkServer, Integer.parseInt(zkPort));
-        PrintWriter out = new PrintWriter(s.getOutputStream(), true);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
-        out.println(cmd);
-        String line = reader.readLine();
-        StringBuilder sb = new StringBuilder();
-        while (line != null) {
-            sb.append(line);
-            sb.append("<br/>");
-            line = reader.readLine();
+        StringBuilder sb;
+        try (Socket s = new Socket(zkServer, Integer.parseInt(zkPort)); PrintWriter out = new PrintWriter(s.getOutputStream(), true); BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream()))) {
+            out.println(cmd);
+            String line = reader.readLine();
+            sb = new StringBuilder();
+            while (line != null) {
+                sb.append(line);
+                sb.append("<br/>");
+                line = reader.readLine();
+            }
         }
-        reader.close();
-        out.close();
-        s.close();
         return sb.toString();
     }
 }
