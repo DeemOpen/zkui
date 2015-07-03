@@ -91,13 +91,14 @@ public enum ServletUtil {
         
     }
     
-    public ZooKeeper getZookeeper(HttpServletRequest request, HttpServletResponse response, String zkServer) {
+    public ZooKeeper getZookeeper(HttpServletRequest request, HttpServletResponse response, String zkServer,String acl) {
         try {
             
             HttpSession session = request.getSession();
             ZooKeeper zk = (ZooKeeper) session.getAttribute("zk");
             if (zk == null || zk.getState() != ZooKeeper.States.CONNECTED) {
                 zk = ZooKeeperUtil.INSTANCE.createZKConnection(zkServer);
+                ZooKeeperUtil.INSTANCE.setDefaultAcl(acl);
                 if (zk.getState() != ZooKeeper.States.CONNECTED) {
                     session.setAttribute("zk", null);
                 } else {
