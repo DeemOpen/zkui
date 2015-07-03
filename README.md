@@ -46,6 +46,7 @@ Features
 8. Basic Role based authentication.
 9. LDAP authentication supported.
 10. Root node /zookeeper hidden for safety.
+11. ACL supported global level.
 
 Import File Format
 ====================
@@ -123,7 +124,7 @@ keytool -keystore keystore -alias jetty -genkey -keyalg RSA
 
 Limitations
 ====================
-1. ACLs are not yet fully supported
+1. ACLs are fully supported but at a global level.
 
 Screenshots
 ====================
