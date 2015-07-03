@@ -18,6 +18,7 @@
 package com.deem.zkui.utils;
 
 import com.deem.zkui.vo.LeafBean;
+import com.deem.zkui.vo.ZKNode;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,10 +55,9 @@ public enum ZooKeeperUtil {
 
     private final static org.slf4j.Logger logger = LoggerFactory.getLogger(ZooKeeperUtil.class);
 
-    public ZooKeeper createZKConnection(String url) throws IOException, InterruptedException {
+    public ZooKeeper createZKConnection(String url, Integer zkSessionTimeout) throws IOException, InterruptedException {
         Integer connectAttempt = 0;
-
-        ZooKeeper zk = new ZooKeeper(url, 2000, new Watcher() {
+        ZooKeeper zk = new ZooKeeper(url, zkSessionTimeout, new Watcher() {
             @Override
             public void process(WatchedEvent event) {
                 logger.trace("Connecting to ZK.");
@@ -248,26 +248,44 @@ public enum ZooKeeperUtil {
         }
     }
 
-    public List<String> listFolders(ZooKeeper zk, String path) throws KeeperException, InterruptedException {
-        List<String> result = new ArrayList<>();
+    public ZKNode listNodeEntries(ZooKeeper zk, String path, String authRole) throws KeeperException, InterruptedException {
+        List<String> folders = new ArrayList<>();
+        List<LeafBean> leaves = new ArrayList<>();
+
         List<String> children = zk.getChildren(path, false);
         if (children != null) {
             for (String child : children) {
                 if (!child.equals(ZK_SYSTEM_NODE)) {
+
                     List<String> subChildren = zk.getChildren(path + ("/".equals(path) ? "" : "/") + child, false);
                     boolean isFolder = subChildren != null && !subChildren.isEmpty();
                     if (isFolder) {
-                        result.add(child);
+                        folders.add(child);
+                    } else {
+                        String childPath = getNodePath(path, child);
+                        leaves.add(this.getNodeValue(zk, path, childPath, child, authRole));
                     }
+
                 }
 
             }
         }
 
-        Collections.sort(result);
-        return result;
+        Collections.sort(folders);
+        Collections.sort(leaves, new Comparator<LeafBean>() {
+            @Override
+            public int compare(LeafBean o1, LeafBean o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+
+        ZKNode zkNode = new ZKNode();
+        zkNode.setLeafBeanLSt(leaves);
+        zkNode.setNodeLst(folders);
+        return zkNode;
     }
 
+    @Deprecated
     public List<LeafBean> listLeaves(ZooKeeper zk, String path, String authRole) throws InterruptedException, KeeperException {
         List<LeafBean> leaves = new ArrayList<>();
 
@@ -275,7 +293,6 @@ public enum ZooKeeperUtil {
         if (children != null) {
             for (String child : children) {
                 String childPath = getNodePath(path, child);
-
                 List<String> subChildren = Collections.emptyList();
                 subChildren = zk.getChildren(childPath, false);
                 boolean isFolder = subChildren != null && !subChildren.isEmpty();
@@ -293,6 +310,27 @@ public enum ZooKeeperUtil {
         });
 
         return leaves;
+    }
+
+    @Deprecated
+    public List<String> listFolders(ZooKeeper zk, String path) throws KeeperException, InterruptedException {
+        List<String> folders = new ArrayList<>();
+        List<String> children = zk.getChildren(path, false);
+        if (children != null) {
+            for (String child : children) {
+                if (!child.equals(ZK_SYSTEM_NODE)) {
+                    List<String> subChildren = zk.getChildren(path + ("/".equals(path) ? "" : "/") + child, false);
+                    boolean isFolder = subChildren != null && !subChildren.isEmpty();
+                    if (isFolder) {
+                        folders.add(child);
+                    }
+                }
+
+            }
+        }
+
+        Collections.sort(folders);
+        return folders;
     }
 
     public String getNodePath(String path, String name) {

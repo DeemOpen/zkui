@@ -65,7 +65,7 @@ public class RestAccess extends HttpServlet {
             if (hostName == null) {
                 hostName = ServletUtil.INSTANCE.getRemoteAddr(request);
             }
-            zk = ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps.getProperty("defaultAcl"));
+            zk = ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps);
             //get the path of the hosts entry.
             LeafBean hostsNode = null;
             //If app name is mentioned then lookup path is appended with it.

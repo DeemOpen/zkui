@@ -17,6 +17,11 @@
  */
 package com.deem.zkui.controller;
 
+import com.deem.zkui.dao.Dao;
+import com.deem.zkui.utils.ServletUtil;
+import com.deem.zkui.utils.ZooKeeperUtil;
+import com.deem.zkui.vo.LeafBean;
+import com.deem.zkui.vo.ZKNode;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.util.Arrays;
@@ -32,10 +37,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
-import com.deem.zkui.dao.Dao;
-import com.deem.zkui.utils.ServletUtil;
-import com.deem.zkui.utils.ZooKeeperUtil;
-import com.deem.zkui.vo.LeafBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +57,7 @@ public class Home extends HttpServlet {
             Map<String, Object> templateParam = new HashMap<>();
             String zkPath = request.getParameter("zkPath");
             String navigate = request.getParameter("navigate");
-            ZooKeeper zk = ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps.getProperty("defaultAcl"));
+            ZooKeeper zk = ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps);
             List<String> nodeLst;
             List<LeafBean> leafLst;
             String currentPath, parentPath, displayPath;
@@ -67,15 +68,17 @@ public class Home extends HttpServlet {
 
             if (zkPath == null || zkPath.equals("/")) {
                 templateParam.put("zkpath", "/");
-                nodeLst = ZooKeeperUtil.INSTANCE.listFolders(zk, "/");
-                leafLst = ZooKeeperUtil.INSTANCE.listLeaves(zk, "/", authRole);
+                ZKNode zkNode = ZooKeeperUtil.INSTANCE.listNodeEntries(zk, "/", authRole);
+                nodeLst = zkNode.getNodeLst();
+                leafLst = zkNode.getLeafBeanLSt();
                 currentPath = "/";
                 displayPath = "/";
                 parentPath = "/";
             } else {
                 templateParam.put("zkPath", zkPath);
-                nodeLst = ZooKeeperUtil.INSTANCE.listFolders(zk, zkPath);
-                leafLst = ZooKeeperUtil.INSTANCE.listLeaves(zk, zkPath, authRole);
+                ZKNode zkNode = ZooKeeperUtil.INSTANCE.listNodeEntries(zk, zkPath, authRole);
+                nodeLst = zkNode.getNodeLst();
+                leafLst = zkNode.getLeafBeanLSt();
                 currentPath = zkPath + "/";
                 displayPath = zkPath;
                 parentPath = zkPath.substring(0, zkPath.lastIndexOf("/"));
@@ -130,7 +133,7 @@ public class Home extends HttpServlet {
                 case "Save Node":
                     if (!newNode.equals("") && !currentPath.equals("") && authRole.equals(ZooKeeperUtil.ROLE_ADMIN)) {
                         //Save the new node.
-                        ZooKeeperUtil.INSTANCE.createFolder(currentPath + newNode, "foo", "bar", ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps.getProperty("defaultAcl")));
+                        ZooKeeperUtil.INSTANCE.createFolder(currentPath + newNode, "foo", "bar", ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps));
                         request.getSession().setAttribute("flashMsg", "Node created!");
                         dao.insertHistory((String) request.getSession().getAttribute("authName"), request.getRemoteAddr(), "Creating node: " + currentPath + newNode);
                     }
@@ -139,7 +142,7 @@ public class Home extends HttpServlet {
                 case "Save Property":
                     if (!newProperty.equals("") && !currentPath.equals("") && authRole.equals(ZooKeeperUtil.ROLE_ADMIN)) {
                         //Save the new node.
-                        ZooKeeperUtil.INSTANCE.createNode(currentPath, newProperty, newValue, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps.getProperty("defaultAcl")));
+                        ZooKeeperUtil.INSTANCE.createNode(currentPath, newProperty, newValue, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps));
                         request.getSession().setAttribute("flashMsg", "Property Saved!");
                         if (ZooKeeperUtil.INSTANCE.checkIfPwdField(newProperty)) {
                             newValue = ZooKeeperUtil.INSTANCE.SOPA_PIPA;
@@ -151,7 +154,7 @@ public class Home extends HttpServlet {
                 case "Update Property":
                     if (!newProperty.equals("") && !currentPath.equals("") && authRole.equals(ZooKeeperUtil.ROLE_ADMIN)) {
                         //Save the new node.
-                        ZooKeeperUtil.INSTANCE.setPropertyValue(currentPath, newProperty, newValue, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps.getProperty("defaultAcl")));
+                        ZooKeeperUtil.INSTANCE.setPropertyValue(currentPath, newProperty, newValue, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps));
                         request.getSession().setAttribute("flashMsg", "Property Updated!");
                         if (ZooKeeperUtil.INSTANCE.checkIfPwdField(newProperty)) {
                             newValue = ZooKeeperUtil.INSTANCE.SOPA_PIPA;
@@ -161,7 +164,7 @@ public class Home extends HttpServlet {
                     response.sendRedirect("/home?zkPath=" + displayPath);
                     break;
                 case "Search":
-                    Set<LeafBean> searchResult = ZooKeeperUtil.INSTANCE.searchTree(searchStr, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps.getProperty("defaultAcl")), authRole);
+                    Set<LeafBean> searchResult = ZooKeeperUtil.INSTANCE.searchTree(searchStr, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps), authRole);
                     templateParam.put("searchResult", searchResult);
                     ServletUtil.INSTANCE.renderHtml(request, response, templateParam, "search.ftl.html");
                     break;
@@ -171,7 +174,7 @@ public class Home extends HttpServlet {
                         if (propChkGroup != null) {
                             for (String prop : propChkGroup) {
                                 List delPropLst = Arrays.asList(prop);
-                                ZooKeeperUtil.INSTANCE.deleteLeaves(delPropLst, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps.getProperty("defaultAcl")));
+                                ZooKeeperUtil.INSTANCE.deleteLeaves(delPropLst, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps));
                                 request.getSession().setAttribute("flashMsg", "Delete Completed!");
                                 dao.insertHistory((String) request.getSession().getAttribute("authName"), request.getRemoteAddr(), "Deleting Property: " + delPropLst.toString());
                             }
@@ -179,7 +182,7 @@ public class Home extends HttpServlet {
                         if (nodeChkGroup != null) {
                             for (String node : nodeChkGroup) {
                                 List delNodeLst = Arrays.asList(node);
-                                ZooKeeperUtil.INSTANCE.deleteFolders(delNodeLst, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps.getProperty("defaultAcl")));
+                                ZooKeeperUtil.INSTANCE.deleteFolders(delNodeLst, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps));
                                 request.getSession().setAttribute("flashMsg", "Delete Completed!");
                                 dao.insertHistory((String) request.getSession().getAttribute("authName"), request.getRemoteAddr(), "Deleting Nodes: " + delNodeLst.toString());
                             }

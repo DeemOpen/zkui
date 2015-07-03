@@ -17,29 +17,30 @@
  */
 package com.deem.zkui.utils;
 
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.zookeeper.ZooKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.util.Arrays;
-import java.util.HashMap;
 
 public enum ServletUtil {
-    
+
     INSTANCE;
     private final static Logger logger = LoggerFactory.getLogger(ServletUtil.class);
-    
+
     public void renderHtml(HttpServletRequest request, HttpServletResponse response, Map<String, Object> templateParam, String view) throws IOException, TemplateException {
-        
+
         if (request != null && response != null && templateParam != null) {
             //There is no way to access session info in freemarker template. 
             //Hence all view rendering happens via this function which adds session info to attribute for each request.
@@ -53,24 +54,22 @@ public enum ServletUtil {
                 }
                 templateParam.put("authName", session.getAttribute("authName"));
                 templateParam.put("authRole", session.getAttribute("authRole"));
-                
+
                 response.setContentType("text/html");
                 Template template = null;
-                
+                long startTime = System.currentTimeMillis();
                 Configuration config = new Configuration();
                 config.setClassForTemplateLoading(request.getServletContext().getClass(), "/");
                 template = config.getTemplate("/webapp/template/" + view);
-                
-                try (Writer out = new OutputStreamWriter(response.getOutputStream())) {
-                    template.process(templateParam, out);
-                    out.flush();
-                }
-                
+                template.process(templateParam, response.getWriter());
+                long estimatedTime = System.currentTimeMillis() - startTime;
+                logger.trace("Elapsed Time in Secs for Rendering: " + estimatedTime / 1000);
+
             }
         }
-        
+
     }
-    
+
     public void renderError(HttpServletRequest request, HttpServletResponse response, String error) {
         try {
             logger.error("Error :" + error);
@@ -81,30 +80,30 @@ public enum ServletUtil {
             config.setClassForTemplateLoading(request.getServletContext().getClass(), "/");
             template = config.getTemplate("/webapp/template/error.ftl.html");
             templateParam.put("error", error);
-            try (Writer out = new OutputStreamWriter(response.getOutputStream())) {
-                template.process(templateParam, out);
-                out.flush();
-            }
+            template.process(templateParam, response.getWriter());
         } catch (TemplateException | IOException ex) {
             logger.error(Arrays.toString(ex.getStackTrace()));
         }
-        
+
     }
-    
-    public ZooKeeper getZookeeper(HttpServletRequest request, HttpServletResponse response, String zkServer,String acl) {
+
+    public ZooKeeper getZookeeper(HttpServletRequest request, HttpServletResponse response, String zkServer, Properties globalProps) {
         try {
-            
+
             HttpSession session = request.getSession();
             ZooKeeper zk = (ZooKeeper) session.getAttribute("zk");
             if (zk == null || zk.getState() != ZooKeeper.States.CONNECTED) {
-                zk = ZooKeeperUtil.INSTANCE.createZKConnection(zkServer);
-                ZooKeeperUtil.INSTANCE.setDefaultAcl(acl);
+                Integer zkSessionTimeout = Integer.parseInt(globalProps.getProperty("zkSessionTimeout"));
+                //Converting seconds to ms.
+                zkSessionTimeout = zkSessionTimeout * 1000;
+                zk = ZooKeeperUtil.INSTANCE.createZKConnection(zkServer, zkSessionTimeout);
+                ZooKeeperUtil.INSTANCE.setDefaultAcl(globalProps.getProperty("defaultAcl"));
                 if (zk.getState() != ZooKeeper.States.CONNECTED) {
                     session.setAttribute("zk", null);
                 } else {
                     session.setAttribute("zk", zk);
                 }
-                
+
             }
             return zk;
         } catch (IOException | InterruptedException ex) {
@@ -112,16 +111,16 @@ public enum ServletUtil {
         }
         return null;
     }
-    
+
     public void closeZookeeper(ZooKeeper zk) {
         try {
             zk.close();
         } catch (Exception ex) {
             logger.error("Error in closing zk,will cause problem in zk! " + ex.getMessage());
         }
-        
+
     }
-    
+
     public String externalizeNodeValue(byte[] value) {
         return value == null ? "" : new String(value).replaceAll("\\n", "\\\\n").replaceAll("\\r", "");
         // We might want to BASE64 encode it
@@ -135,5 +134,5 @@ public enum ServletUtil {
         }
         return remoteAddr;
     }
-    
+
 }
