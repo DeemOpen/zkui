@@ -83,7 +83,7 @@ public enum ZooKeeperUtil {
 
     public void setDefaultAcl(String jsonAcl) {
         if (jsonAcl == null || jsonAcl.trim().length() == 0) {
-            logger.warn("Using UNSAFE ACL. Anyone on your LAN can change your Zookeeper data");
+            logger.trace("Using UNSAFE ACL. Anyone on your LAN can change your Zookeeper data");
             defaultAcl = ZooDefs.Ids.OPEN_ACL_UNSAFE;
             return;
         }
@@ -360,7 +360,7 @@ public enum ZooKeeperUtil {
     }
 
     public Boolean checkIfPwdField(String property) {
-        if (property.contains("PWD") || property.contains("pwd") || property.contains("PASSWORD") || property.contains("password")) {
+        if (property.contains("PWD") || property.contains("pwd") || property.contains("PASSWORD") || property.contains("password") || property.contains("PASSWD") || property.contains("passwd")) {
             return true;
         } else {
             return false;
