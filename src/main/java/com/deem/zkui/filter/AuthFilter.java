@@ -48,8 +48,7 @@ public class AuthFilter implements Filter {
             HttpSession session = request.getSession();
             if (session != null) {
                 if (session.getAttribute("authName") == null || session.getAttribute("authRole") == null) {
-                    dispatcher = request.getRequestDispatcher("/login");
-                    dispatcher.forward(request, response);
+                    response.sendRedirect("/login");
                     return;
                 }
 
