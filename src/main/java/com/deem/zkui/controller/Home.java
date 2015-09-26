@@ -124,6 +124,8 @@ public class Home extends HttpServlet {
             String newProperty = request.getParameter("newProperty");
             String newValue = request.getParameter("newValue");
             String newNode = request.getParameter("newNode");
+            System.out.println("new node " + newNode);
+            System.out.println("new value " + newValue);
 
             String[] nodeChkGroup = request.getParameterValues("nodeChkGroup");
             String[] propChkGroup = request.getParameterValues("propChkGroup");

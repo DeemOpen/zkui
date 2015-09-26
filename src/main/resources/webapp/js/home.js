@@ -28,9 +28,8 @@ $(document).ready(function() {
     //Class based selector 
     $(".href-select").click(function() {
         var propName = $(this).text();
-        var propVal = $(this).attr('itemprop');
-        $("#newProperty").attr('readonly', true);
-        $("#newProperty").val(propName);
+        var propVal = $(this).attr('itemprop').replace("\\r\\n","\r\n").replace("\\n","\n");
+        $("#newProperty").attr('readonly', true).val(propName);
         $("#newValue").val(propVal);
 
         $("#savePropertyBtn").hide();
