@@ -63,7 +63,7 @@ public class LeafBean implements Comparable<LeafBean> {
 
     public String getStrValue() {
         try {
-            return new String(this.value, "UTF-8");
+            return new String(this.value, "ISO-8859-1");
         } catch (UnsupportedEncodingException ex) {
             logger.error(Arrays.toString(ex.getStackTrace()));
         }

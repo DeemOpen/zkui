@@ -25,6 +25,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +34,8 @@ import javax.servlet.http.HttpSession;
 import org.apache.zookeeper.ZooKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.deem.zkui.vo.LeafBean;
 
 public enum ServletUtil {
 
@@ -55,7 +58,19 @@ public enum ServletUtil {
                 templateParam.put("authName", session.getAttribute("authName"));
                 templateParam.put("authRole", session.getAttribute("authRole"));
 
+                
+                StringBuilder str = new StringBuilder();
+                try {
+                List<LeafBean> leafBeans = (List<LeafBean>) templateParam.get("leafLst");
+                for(LeafBean leafBean: leafBeans) {
+                    str.append(leafBean.getStrValue());
+                }} catch(Exception e) {
+                    
+                }
+                logger.info("Value="+ str);
+                
                 response.setContentType("text/html");
+                response.setCharacterEncoding("ISO-8859-1");
                 Template template = null;
                 long startTime = System.currentTimeMillis();
                 Configuration config = new Configuration();
