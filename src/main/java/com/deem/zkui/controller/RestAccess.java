@@ -155,8 +155,9 @@ public class RestAccess extends HttpServlet {
                 }
 
             }
-
+            logger.info("Value="+ resultOut.toString());
             response.setContentType("text/plain");
+            response.setCharacterEncoding("ISO-8859-1");
             try (PrintWriter out = response.getWriter()) {
                 out.write(resultOut.toString());
             }
