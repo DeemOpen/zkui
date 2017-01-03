@@ -100,6 +100,9 @@ public class Main {
             https.setPort(Integer.parseInt(globalProps.getProperty("serverPort")));
             server.setConnectors(new Connector[]{https});
         } else {
+            if(globalProps.getProperty("X-Forwarded-For").equals("true")) {
+                http_config.addCustomizer(new org.eclipse.jetty.server.ForwardedRequestCustomizer());
+            }
             ServerConnector http = new ServerConnector(server, new HttpConnectionFactory(http_config));
             http.setPort(Integer.parseInt(globalProps.getProperty("serverPort")));
             server.setConnectors(new Connector[]{http});
