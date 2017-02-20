@@ -249,13 +249,6 @@ public enum ZooKeeperUtil {
     }
 
     public ZKNode listNodeEntries(ZooKeeper zk, String path, String authRole) throws KeeperException, InterruptedException {
-        //Add auth info 
-        for (ACL acl : defaultAcl) {
-            String scheme=acl.getId().getScheme();
-            String auth=acl.getId().getId();
-            zk.addAuthInfo(scheme,auth.getBytes());
-        }
-        
         List<String> folders = new ArrayList<>();
         List<LeafBean> leaves = new ArrayList<>();
 
