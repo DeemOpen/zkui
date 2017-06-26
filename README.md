@@ -1,3 +1,8 @@
+**Updates:**  
+*2017.6.26*
+- Force using the "UTF-8" character encoding when importing.
+
+---
 zkui - Zookeeper UI Dashboard
 ====================
 A UI dashboard that allows CRUD operations on Zookeeper.
