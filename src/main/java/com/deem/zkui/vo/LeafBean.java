@@ -76,6 +76,6 @@ public class LeafBean implements Comparable<LeafBean> {
 
     @Override
     public int compareTo(LeafBean o) {
-        return (this.path + this.name).compareTo((o.path + o.path));
+        return (this.path + this.name).compareTo((o.path + o.name));
     }
 }
