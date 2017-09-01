@@ -44,5 +44,11 @@ $(document).ready(function() {
         $("#savePropertyBtn").show();
     });
 
+    //trim input or textarea
+    $('.container form').submit(function(){
+        $(this).find('input:text,textarea').each(function(){
+            $(this).val($.trim($(this).val()));
+        });
+    });
 
 }); 
