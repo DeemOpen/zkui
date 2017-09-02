@@ -18,10 +18,6 @@
 package com.deem.zkui;
 
 import com.deem.zkui.dao.Dao;
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.Date;
-import java.util.Properties;
 import org.eclipse.jetty.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.Connector;
@@ -40,6 +36,11 @@ import org.eclipse.jetty.webapp.Configuration.ClassList;
 import org.eclipse.jetty.webapp.JettyWebXmlConfiguration;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.Date;
+import java.util.Properties;
 
 public class Main {
 
@@ -86,8 +87,9 @@ public class Main {
         HttpConfiguration http_config = new HttpConfiguration();
         http_config.setSecureScheme("https");
         http_config.setSecurePort(Integer.parseInt(globalProps.getProperty("serverPort")));
-        
-        if (globalProps.getProperty("https").equals("true")) {
+
+        String httpsProp = globalProps.getProperty("https");
+        if (httpsProp != null && httpsProp.equals("true")) {
             File keystoreFile = new File(globalProps.getProperty("keystoreFile"));
             SslContextFactory sslContextFactory = new SslContextFactory();
             sslContextFactory.setKeyStorePath(keystoreFile.getAbsolutePath());
@@ -100,7 +102,8 @@ public class Main {
             https.setPort(Integer.parseInt(globalProps.getProperty("serverPort")));
             server.setConnectors(new Connector[]{https});
         } else {
-            if(globalProps.getProperty("X-Forwarded-For").equals("true")) {
+            String property = globalProps.getProperty("X-Forwarded-For");
+            if(property != null && property.equals("true")) {
                 http_config.addCustomizer(new org.eclipse.jetty.server.ForwardedRequestCustomizer());
             }
             ServerConnector http = new ServerConnector(server, new HttpConnectionFactory(http_config));
