@@ -27,6 +27,11 @@ body {
     max-height: 620px;
 }
 
+.scroll-pane .tree-node{
+    height: 20px;
+    white-space: nowrap;
+}
+
 .wrap-table{
     table-layout: fixed;
     word-wrap: break-word;

@@ -19,14 +19,6 @@ package com.deem.zkui.utils;
 
 import com.deem.zkui.vo.LeafBean;
 import com.deem.zkui.vo.ZKNode;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
@@ -41,6 +33,15 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 public enum ZooKeeperUtil {
 
@@ -234,6 +235,7 @@ public enum ZooKeeperUtil {
 
     private void createIfDoesntExist(String path, byte[] data, boolean force, ZooKeeper zooKeeper) throws InterruptedException, KeeperException {
         try {
+            path = pathFormat(path);
             zooKeeper.create(path, data, defaultAcl(), CreateMode.PERSISTENT);
         } catch (KeeperException ke) {
             //Explicit Overwrite
@@ -342,7 +344,7 @@ public enum ZooKeeperUtil {
         //Reason exception is caught here is so that lookup can continue to happen if a particular property is not found at parent level.
         try {
             logger.trace("Lookup: path=" + path + ",childPath=" + childPath + ",child=" + child + ",authRole=" + authRole);
-            byte[] dataBytes = zk.getData(childPath, false, new Stat());
+            byte[] dataBytes = zk.getData(pathFormat(childPath), false, new Stat());
             if (!authRole.equals(ROLE_ADMIN)) {
                 if (checkIfPwdField(child)) {
                     return (new LeafBean(path, child, SOPA_PIPA.getBytes()));
@@ -383,10 +385,13 @@ public enum ZooKeeperUtil {
     }
 
     public void setPropertyValue(String path, String name, String value, ZooKeeper zk) throws KeeperException, InterruptedException {
-        String nodePath = path + name;
+        String nodePath = pathFormat(path + name);
         logger.debug("Setting property " + nodePath + " to " + value);
-        zk.setData(nodePath, value.getBytes(), -1);
-
+        if (!nodeExists(nodePath, zk)) {
+            createPathAndNode(path, name, value.getBytes(), true, zk);
+        } else {
+            zk.setData(nodePath, value.getBytes(), -1);
+        }
     }
 
     public boolean nodeExists(String nodeFullPath, ZooKeeper zk) throws KeeperException, InterruptedException {
@@ -431,4 +436,9 @@ public enum ZooKeeperUtil {
 
         }
     }
+
+    public String pathFormat(String path) {
+        return null != path && !"".equals(path) ? path.replaceAll("\\\\+", "\\\\").replaceAll("[\\/]+", "/") : path;
+    }
+
 }

@@ -54,10 +54,11 @@
                 <a href="/home?zkPath=${parentPath}"><..></a>
                 <br/>
                 <#list nodeLst as node>
-                <input type="checkbox" name="nodeChkGroup" value="${currentPath}${node}"/>
-                <span class="glyphicon glyphicon-folder-close"></span>
-                <a href="/home?zkPath=${currentPath}${node}">${node}</a>
-                <br/>
+                <div class="tree-node">
+                    <input type="checkbox" name="nodeChkGroup" value="${currentPath}${node}"/>
+                    <span class="glyphicon glyphicon-folder-close"></span>
+                    <a href="/home?zkPath=${currentPath}${node}" title="${node}">${node}</a>
+                </div>
                 </#list>
 
             </div>
@@ -68,6 +69,9 @@
                             <th style="width: 4%"></th>
                             <th>Name</th>
                             <th>Value</th>
+                            <#if showDesc>
+                            <th>Description</th>
+                            </#if>
                         </tr>
                     </thead>
                     <tbody>
@@ -78,13 +82,9 @@
                             </td>
                             <td>
                                 <#if authRole?? && authRole == 'ADMIN' >
-                                <#if leaf.value??>
-                                <a href="#" data-toggle="modal" class="href-select" data-target="#addPropertyModal" itemprop="${leaf.strValue?html}" >${leaf.name}</a> 
+                                    <a href="#" data-toggle="modal" class="href-select" data-target="#addPropertyModal" itemprop="<#if leaf.value?? >${leaf.strValue?html}</#if>" itemdesc="<#if leaf.description?? >${leaf.description?html}</#if>">${leaf.name}</a>
                                 <#else>
-                                <a href="#" data-toggle="modal" class="href-select" data-target="#addPropertyModal" itemprop="" >${leaf.name}</a> 
-                                </#if>
-                                <#else>
-                                ${leaf.name}
+                                    ${leaf.name}
                                 </#if>
                             </td>
                             <#if navigate?? && navigate == 'true'>
@@ -96,7 +96,9 @@
                                 </#if>
                             </td>
                             </#if>
-
+                            <#if showDesc>
+                            <td title="${leaf.description}">${leaf.description}</td>
+                            </#if>
                         </tr>
                         </#list>
                     </tbody>
@@ -175,6 +177,13 @@
                                     <span class="input-group-addon">Value</span>
                                     <textarea id="newValue" name="newValue" class="form-control" placeholder="value" style="resize:vertical;" ></textarea>
                                 </div>
+                                <#if showDesc>
+								<br/>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-addon">Description</span>
+                                    <textarea id="newDescription" name="newDescription" class="form-control" placeholder="description" style="resize:vertical;" ></textarea>
+                                </div>
+                                </#if>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
