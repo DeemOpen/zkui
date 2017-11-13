@@ -1,3 +1,5 @@
 .idea/
 zkui.iml
 /target/
+zkui-out.log
+zkui.h2.db
