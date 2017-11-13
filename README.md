@@ -8,17 +8,23 @@ Requires Java 7 to run.
 
 Setup
 ====================
-1. mvn clean install
-2. Copy the config.cfg to the folder with the jar file. Modify it to point to the zookeeper instance. Multiple zk instances are coma separated.  eg: server1:2181,server2:2181. First server should always be the leader.
-3. Run the jar. ( nohup java -jar zkui-2.0-SNAPSHOT-jar-with-dependencies.jar & )
-4. <a href="http://localhost:9090">http://localhost:9090</a> 
+1. `mvn clean install`
+2. Copy the config.cfg to the folder with the jar file. Modify it to point to the zookeeper instance. Multiple ZooKeeper instances are comma separated, for example `server1:2181,server2:2181`. First server should always be the leader.
+3. Run the jar
+
+    ```
+    nohup java -jar target/zkui-2.0-SNAPSHOT-jar-with-dependencies.jar &
+    ```
+
+4. <a href="http://localhost:9090">http://localhost:9090</a>
 
 Login Info
-====================
-username: admin, pwd: manager (Admin privileges, CRUD operations supported)
-username: appconfig, pwd: appconfig (Readonly privileges, Read operations supported)
+==========
 
-You can change this in the config.cfg
+* Admin privileges, CRUD operations supported: username: `admin`, pwd: `manager`
+* Readonly privileges, Read operations supported: username: `appconfig`, pwd: `appconfig`
+
+You can change this in the `config.cfg`
 
 Technology Stack
 ====================
@@ -51,15 +57,18 @@ Features
 Import File Format
 ====================
 # add property
-/appconfig/path=property=value
-# remove a property
--/path/property
 
-You can either upload a file or specify a http url of the version control system that way all your zookeeper changes will be in version control. 
+`/appconfig/path=property=value`
+# remove a property
+
+`-/path/property`
+
+You can either upload a file or specify a http url of the version control system that way all your zookeeper changes will be in version control.
 
 Export File Format
 ====================
-/appconfig/path=property=value
+
+`/appconfig/path=property=value`
 
 You can export a file and then use the same format to import.
 
@@ -100,11 +109,11 @@ Standardization
 ====================
 Zookeeper doesnt enforce any order in which properties are stored and retrieved. ZKUI however organizes properties in the following manner for easy lookup.
 Each server/box has its hostname listed under /appconfig/hosts and that points to the path where properties reside for that path. So when the lookup for a property occurs over a rest call it first finds the hostname entry under /appconfig/hosts and then looks for that property in the location mentioned.
-eg: /appconfig/hosts/myserver.com=/appconfig/dev/app1 
+eg: /appconfig/hosts/myserver.com=/appconfig/dev/app1
 This means that when myserver.com tries to lookup the propery it looks under /appconfig/dev/app1
 
 You can also append app name to make lookup easy.
-eg: /appconfig/hosts/myserver.com:testapp=/appconfig/dev/test/app1 
+eg: /appconfig/hosts/myserver.com:testapp=/appconfig/dev/test/app1
 eg: /appconfig/hosts/myserver.com:prodapp=/appconfig/dev/prod/app1
 
 Lookup can be done by grouping of app and cluster. A cluster can have many apps under it. When the bootloader entry looks like this /appconfig/hosts/myserver.com=/appconfig/dev the rest lookup happens on the following paths.
@@ -118,7 +127,7 @@ This standardization is only needed if you choose to use the rest lookup. You ca
 
 HTTPS
 ====================
-You can enable https if needed. 
+You can enable https if needed.
 keytool -keystore keystore -alias jetty -genkey -keyalg RSA
 
 
