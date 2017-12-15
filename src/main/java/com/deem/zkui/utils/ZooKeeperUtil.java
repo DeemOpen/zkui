@@ -178,12 +178,12 @@ public enum ZooKeeperUtil {
                 int firstEq = line.indexOf('=');
                 int secEq = line.indexOf('=', firstEq + 1);
 
-                String path = line.substring(0, firstEq);
+                String path = line.substring(0, firstEq).trim();
                 if ("/".equals(path)) {
                     path = "";
                 }
-                String name = line.substring(firstEq + 1, secEq);
-                String value = readExternalizedNodeValue(line.substring(secEq + 1));
+                String name = line.substring(firstEq + 1, secEq).trim();
+                String value = readExternalizedNodeValue(line.substring(secEq + 1)).trim();
                 String fullNodePath = path + "/" + name;
 
                 // Skip import of system node
@@ -362,11 +362,7 @@ public enum ZooKeeperUtil {
     }
 
     public Boolean checkIfPwdField(String property) {
-        if (property.contains("PWD") || property.contains("pwd") || property.contains("PASSWORD") || property.contains("password") || property.contains("PASSWD") || property.contains("passwd")) {
-            return true;
-        } else {
-            return false;
-        }
+        return property.contains("PWD") || property.contains("pwd") || property.contains("PASSWORD") || property.contains("password") || property.contains("PASSWD") || property.contains("passwd");
     }
 
     public void createNode(String path, String name, String value, ZooKeeper zk) throws KeeperException, InterruptedException {
