@@ -20,13 +20,8 @@ package com.deem.zkui.utils;
 import com.deem.zkui.vo.LeafBean;
 import com.deem.zkui.vo.ZKNode;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
+
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
@@ -36,6 +31,7 @@ import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.data.Stat;
+import org.h2.util.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -131,17 +127,26 @@ public enum ZooKeeperUtil {
         defaultAcl = newDefault;
     }
 
-    public Set<LeafBean> searchTree(String searchString, ZooKeeper zk, String authRole) throws InterruptedException, KeeperException {
+    public Set<LeafBean> searchTree(String searchString, String zkRootPath, ZooKeeper zk, String authRole) throws InterruptedException, KeeperException {
         //Export all nodes and then search.
+        long startTime = System.currentTimeMillis();
         Set<LeafBean> searchResult = new TreeSet<>();
         Set<LeafBean> leaves = new TreeSet<>();
-        exportTreeInternal(leaves, ZK_ROOT_NODE, zk, authRole);
+        if (StringUtils.isNullOrEmpty(zkRootPath)) {
+            zkRootPath = ZK_ROOT_NODE;
+        }
+        exportTreeInternal(leaves, zkRootPath, zk, authRole);
+        long estimatedTime = System.currentTimeMillis() - startTime;
+        logger.trace("Elapsed Time in Secs for Export Tree Internal: {}, the total search leaves {}" , estimatedTime / 1000, leaves.size());
+        startTime = System.currentTimeMillis();
         for (LeafBean leaf : leaves) {
             String leafValue = ServletUtil.INSTANCE.externalizeNodeValue(leaf.getValue());
             if (leaf.getPath().contains(searchString) || leaf.getName().contains(searchString) || leafValue.contains(searchString)) {
                 searchResult.add(leaf);
             }
         }
+        long estimatedTime1 = System.currentTimeMillis() - startTime;
+        logger.trace("Elapsed Time in Secs for Search: {}", estimatedTime1 / 1000);
         return searchResult;
 
     }

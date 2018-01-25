@@ -118,12 +118,13 @@
                         <div class="modal-content">
                             <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                                <h4 class="modal-title" id="myModalLabel">Search</h4>
+                                <h4 class="modal-title" id="myModalLabel">Search in ${displayPath}</h4>
                             </div>
                             <div class="modal-body">
                                 <div class="input-group input-group-lg">
                                     <span class="input-group-addon">Search</span>
                                     <input type="text" id="search"  name="searchStr" class="form-control" >
+                                    <input type="hidden" name="zkPath" value="${displayPath}"/>
                                 </div>
                             </div>
                             <div class="modal-footer">
