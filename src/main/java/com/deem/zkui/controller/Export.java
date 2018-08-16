@@ -56,11 +56,6 @@ public class Export extends HttpServlet {
                 authRole = ZooKeeperUtil.ROLE_USER;
             }
 
-            String keyDescPath = globalProps.getProperty("keyDesc");
-            if (keyDescPath != null && !"".equals(keyDescPath)) {
-                keyDescPath = ("/" + keyDescPath + "/");
-            }
-
             String zkPath = request.getParameter("zkPath");
             StringBuilder output = new StringBuilder();
             output.append("#App Config Dashboard (ACD) dump created on :").append(new Date()).append("\n");
@@ -68,12 +63,6 @@ public class Export extends HttpServlet {
             Set<LeafBean> leaves = ZooKeeperUtil.INSTANCE.exportTree(zkPath, zk, authRole);
             for (LeafBean leaf : leaves) {
                 output.append(leaf.getPath()).append('=').append(leaf.getName()).append('=').append(ServletUtil.INSTANCE.externalizeNodeValue(leaf.getValue())).append('\n');
-                if (keyDescPath != null && !"".equals(keyDescPath)) {
-                    LeafBean nodeValue = ZooKeeperUtil.INSTANCE.getNodeValue(zk, keyDescPath, keyDescPath + leaf.getPath() + "/" + leaf.getName(), leaf.getName(), authRole);
-                    if (nodeValue != null) {
-                        output.append(ZooKeeperUtil.INSTANCE.pathFormat(keyDescPath + leaf.getPath())).append('=').append(nodeValue.getName()).append('=').append(ServletUtil.INSTANCE.externalizeNodeValue(nodeValue.getValue())).append('\n');
-                    }
-                }
             }// for all leaves
             response.setContentType("text/plain;charset=UTF-8");
             try (PrintWriter out = response.getWriter()) {

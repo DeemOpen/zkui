@@ -51,6 +51,7 @@ public class ChangeLog extends HttpServlet {
             List<History> historyLst = dao.fetchHistoryRecords();
             templateParam.put("historyLst", historyLst);
             templateParam.put("historyNode", "");
+            templateParam.put("historyLimit", globalProps.getProperty("historyLimit"));
             ServletUtil.INSTANCE.renderHtml(request, response, templateParam, "history.ftl.html");
         } catch (TemplateException ex) {
             logger.error(Arrays.toString(ex.getStackTrace()));
@@ -74,6 +75,7 @@ public class ChangeLog extends HttpServlet {
                 historyLst = dao.fetchHistoryRecordsByNode("%" + historyNode + "%");
                 templateParam.put("historyLst", historyLst);
                 templateParam.put("historyNode", historyNode);
+                templateParam.put("historyLimit", globalProps.getProperty("historyLimit"));
                 ServletUtil.INSTANCE.renderHtml(request, response, templateParam, "history.ftl.html");
 
             } else {

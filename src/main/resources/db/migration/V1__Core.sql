@@ -22,3 +22,9 @@ change_date datetime,
 change_summary varchar(500),
 change_ip varchar(500)
 );
+
+create table descriptions (
+id  bigint default null auto_increment primary key,
+path varchar(500),
+description varchar(500)
+);
