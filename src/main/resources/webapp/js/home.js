@@ -44,5 +44,7 @@ $(document).ready(function() {
         $("#savePropertyBtn").show();
     });
 
+    $("#updateForm").submit(function(e){
+        try{eval('a='+$('#newValue').val());}catch(err){e.preventDefault();alert("There was a problem");}});
 
 }); 
