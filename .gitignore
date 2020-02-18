@@ -1,3 +1,6 @@
 .idea/
 zkui.iml
 /target/
+*.out
+*.h2.db
+*.log

@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 
-PIDFILE=/var/run/zkui.pid
+PIDFILE=~/zkui.pid
 ZKUIBINDIR=$(cd `dirname $0`; pwd)
-ZKUICLASSNAME="zkui-2.0-SNAPSHOT-jar-with-dependencies.jar"
+ZKUICLASSNAME="target/zkui-2.0-SNAPSHOT-jar-with-dependencies.jar"
 ZKUI_DAEMON_OUT=$ZKUIBINDIR/zkui.out
 
 start(){
-    echo  -n "Starting zkui ... "
+    echo  "Starting zkui ... $ZKUIBINDIR"
     if [ -f "$PIDFILE" ]; then
         if kill -0 `cat "$PIDFILE"` > /dev/null 2>&1; then
             echo zkui already running as process `cat "$PIDFILE"`. 
             exit 0
         fi
     fi
+    cp config.cfg target
     nohup java -jar "$ZKUIBINDIR/$ZKUICLASSNAME" > "$ZKUI_DAEMON_OUT" 2>&1 < /dev/null &
     if [ $? -eq 0 ];
     then
