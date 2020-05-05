@@ -6,12 +6,7 @@ VERSION=2.0-SNAPSHOT
 all: build publish
 
 build:
-	mvn clean install
-	cp config.cfg docker
-	cp target/$(NAME)-*-jar-with-dependencies.jar docker
-	docker build -t $(NAME):$(VERSION) --no-cache --rm docker
-	rm docker/$(NAME)-*.jar
-	rm docker/config.cfg
+	docker build -t $(NAME):$(VERSION) .
 
 publish:
 	docker tag $(NAME):$(VERSION) $(NAME):$(VERSION)
