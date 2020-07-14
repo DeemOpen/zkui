@@ -19,14 +19,7 @@ package com.deem.zkui.utils;
 
 import com.deem.zkui.vo.LeafBean;
 import com.deem.zkui.vo.ZKNode;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
@@ -41,6 +34,15 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 public enum ZooKeeperUtil {
 
@@ -81,7 +83,12 @@ public enum ZooKeeperUtil {
         return defaultAcl;
     }
 
-    public void setDefaultAcl(String jsonAcl) {
+    /**
+     * set default ACL
+     * @param jsonAcl
+     * @param zk  if zk is not null, add the corresponding ACL to the zk
+     */
+    public void setDefaultAcl(String jsonAcl, ZooKeeper zk) {
         if (jsonAcl == null || jsonAcl.trim().length() == 0) {
             logger.trace("Using UNSAFE ACL. Anyone on your LAN can change your Zookeeper data");
             defaultAcl = ZooDefs.Ids.OPEN_ACL_UNSAFE;
@@ -96,6 +103,12 @@ public enum ZooKeeperUtil {
                 JSONObject acl = (JSONObject) it.next();
                 String scheme = ((String) acl.get("scheme")).trim();
                 String id = ((String) acl.get("id")).trim();
+
+                //add the corresponding ACL to the zk
+                if(zk != null){
+                    zk.addAuthInfo(scheme, id.getBytes());
+                }
+
                 int perms = 0;
                 String permStr = ((String) acl.get("perms")).toLowerCase().trim();
                 for (char c : permStr.toCharArray()) {

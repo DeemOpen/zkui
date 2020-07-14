@@ -20,19 +20,20 @@ package com.deem.zkui.utils;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+
+import org.apache.zookeeper.ZooKeeper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import org.apache.zookeeper.ZooKeeper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public enum ServletUtil {
 
@@ -98,7 +99,7 @@ public enum ServletUtil {
                 //Converting seconds to ms.
                 zkSessionTimeout = zkSessionTimeout * 1000;
                 zk = ZooKeeperUtil.INSTANCE.createZKConnection(zkServer, zkSessionTimeout);
-                ZooKeeperUtil.INSTANCE.setDefaultAcl(globalProps.getProperty("defaultAcl"));
+                ZooKeeperUtil.INSTANCE.setDefaultAcl(globalProps.getProperty("defaultAcl"), zk);
                 if (zk.getState() != ZooKeeper.States.CONNECTED) {
                     session.setAttribute("zk", null);
                 } else {
