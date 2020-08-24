@@ -17,9 +17,13 @@
  */
 package com.deem.zkui.vo;
 
+
 import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 public class LeafBean implements Comparable<LeafBean> {
 
@@ -28,6 +32,7 @@ public class LeafBean implements Comparable<LeafBean> {
     private String name;
     private byte[] value;
     private String strValue;
+    private String description;
 
     public LeafBean(String path, String name, byte[] value) {
         super();
@@ -66,6 +71,14 @@ public class LeafBean implements Comparable<LeafBean> {
 
     public void setStrValue(String strValue) {
         this.strValue = strValue;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @Override

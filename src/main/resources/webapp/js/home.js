@@ -29,6 +29,8 @@ $(document).ready(function() {
     $(".href-select").click(function() {
         var propName = $(this).text();
         var propVal = $(this).attr('itemprop');
+        var propDesc = $(this).attr('itemdesc');
+        $("#newDescription").val(propDesc);
         $("#newProperty").attr('readonly', true);
         $("#newProperty").val(propName);
         $("#newValue").val(propVal);
@@ -44,5 +46,11 @@ $(document).ready(function() {
         $("#savePropertyBtn").show();
     });
 
+    //trim input or textarea
+    $('.container form').submit(function(){
+        $(this).find('input:text,textarea').each(function(){
+            $(this).val($.trim($(this).val()));
+        });
+    });
 
 }); 

@@ -23,6 +23,16 @@ import com.deem.zkui.utils.ZooKeeperUtil;
 import com.deem.zkui.vo.LeafBean;
 import com.deem.zkui.vo.ZKNode;
 import freemarker.template.TemplateException;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.ZooKeeper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,15 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.ZooKeeper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
 @WebServlet(urlPatterns = {"/home"}, loadOnStartup = 1)
@@ -51,8 +52,10 @@ public class Home extends HttpServlet {
         logger.debug("Home Get Action!");
         try {
             Properties globalProps = (Properties) this.getServletContext().getAttribute("globalProps");
+            Dao dao = new Dao(globalProps);
             String zkServer = globalProps.getProperty("zkServer");
             String[] zkServerLst = zkServer.split(",");
+            boolean showDesc = "true".equalsIgnoreCase(globalProps.getProperty("showDesc", "false"));
 
             Map<String, Object> templateParam = new HashMap<>();
             String zkPath = request.getParameter("zkPath");
@@ -87,9 +90,14 @@ public class Home extends HttpServlet {
                 }
             }
 
+            if (showDesc) {
+                dao.putDescription(leafLst);
+            }
+
             templateParam.put("displayPath", displayPath);
             templateParam.put("parentPath", parentPath);
             templateParam.put("currentPath", currentPath);
+            templateParam.put("showDesc", showDesc);
             templateParam.put("nodeLst", nodeLst);
             templateParam.put("leafLst", leafLst);
             templateParam.put("breadCrumbLst", displayPath.split("/"));
@@ -119,6 +127,7 @@ public class Home extends HttpServlet {
             String action = request.getParameter("action");
             String currentPath = request.getParameter("currentPath");
             String displayPath = request.getParameter("displayPath");
+            String newDescription = request.getParameter("newDescription");
             String newProperty = request.getParameter("newProperty");
             String newValue = request.getParameter("newValue");
             String newNode = request.getParameter("newNode");
@@ -143,9 +152,10 @@ public class Home extends HttpServlet {
                     if (!newProperty.equals("") && !currentPath.equals("") && authRole.equals(ZooKeeperUtil.ROLE_ADMIN)) {
                         //Save the new node.
                         ZooKeeperUtil.INSTANCE.createNode(currentPath, newProperty, newValue, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps));
+                        dao.insertDescription(currentPath + '/' + newProperty, newDescription);
                         request.getSession().setAttribute("flashMsg", "Property Saved!");
                         if (ZooKeeperUtil.INSTANCE.checkIfPwdField(newProperty)) {
-                            newValue = ZooKeeperUtil.INSTANCE.SOPA_PIPA;
+                            newValue = ZooKeeperUtil.SOPA_PIPA;
                         }
                         dao.insertHistory((String) request.getSession().getAttribute("authName"), request.getRemoteAddr(), "Saving Property: " + currentPath + "," + newProperty + "=" + newValue);
                     }
@@ -155,9 +165,10 @@ public class Home extends HttpServlet {
                     if (!newProperty.equals("") && !currentPath.equals("") && authRole.equals(ZooKeeperUtil.ROLE_ADMIN)) {
                         //Save the new node.
                         ZooKeeperUtil.INSTANCE.setPropertyValue(currentPath, newProperty, newValue, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps));
+                        dao.insertDescription(currentPath + '/' + newProperty, newDescription);
                         request.getSession().setAttribute("flashMsg", "Property Updated!");
                         if (ZooKeeperUtil.INSTANCE.checkIfPwdField(newProperty)) {
-                            newValue = ZooKeeperUtil.INSTANCE.SOPA_PIPA;
+                            newValue = ZooKeeperUtil.SOPA_PIPA;
                         }
                         dao.insertHistory((String) request.getSession().getAttribute("authName"), request.getRemoteAddr(), "Updating Property: " + currentPath + "," + newProperty + "=" + newValue);
                     }
@@ -178,6 +189,7 @@ public class Home extends HttpServlet {
                                 request.getSession().setAttribute("flashMsg", "Delete Completed!");
                                 dao.insertHistory((String) request.getSession().getAttribute("authName"), request.getRemoteAddr(), "Deleting Property: " + delPropLst.toString());
                             }
+                            dao.deleteDescription(propChkGroup);
                         }
                         if (nodeChkGroup != null) {
                             for (String node : nodeChkGroup) {
@@ -186,6 +198,7 @@ public class Home extends HttpServlet {
                                 request.getSession().setAttribute("flashMsg", "Delete Completed!");
                                 dao.insertHistory((String) request.getSession().getAttribute("authName"), request.getRemoteAddr(), "Deleting Nodes: " + delNodeLst.toString());
                             }
+                            dao.deleteDescriptionByNode(nodeChkGroup);
                         }
 
                     }

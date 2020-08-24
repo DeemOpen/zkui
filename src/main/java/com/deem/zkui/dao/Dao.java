@@ -17,12 +17,18 @@
  */
 package com.deem.zkui.dao;
 
+import com.deem.zkui.domain.Description;
 import com.deem.zkui.domain.History;
+import com.deem.zkui.utils.ZooKeeperUtil;
+import com.deem.zkui.vo.LeafBean;
 import com.googlecode.flyway.core.Flyway;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+
+import com.mysql.jdbc.StringUtils;
 import org.javalite.activejdbc.Base;
 import org.slf4j.LoggerFactory;
 
@@ -31,9 +37,16 @@ public class Dao {
     private final static Integer FETCH_LIMIT = 50;
     private final static org.slf4j.Logger logger = LoggerFactory.getLogger(Dao.class);
     private final Properties globalProps;
+    private int historyLimit = FETCH_LIMIT;
     
     public Dao(Properties globalProps) {
         this.globalProps = globalProps;
+        String historyLimit = this.globalProps == null ? null : this.globalProps.getProperty("historyLimit");
+        if (StringUtils.isEmptyOrWhitespaceOnly(historyLimit)) {
+            try {
+                this.historyLimit = Integer.valueOf(historyLimit);
+            } catch (Exception e) {}
+        }
     }
     
     public void open() {
@@ -61,20 +74,31 @@ public class Dao {
     }
     
     public List<History> fetchHistoryRecords() {
-        this.open();
-        List<History> history = History.findAll().orderBy("ID desc").limit(FETCH_LIMIT);
-        history.size();
-        this.close();
-        return history;
-        
+        try {
+            this.open();
+            List<History> history = History.findAll().orderBy("ID desc").limit(historyLimit);
+            history.size();
+            return history;
+        } catch (Exception ex) {
+            logger.error(Arrays.toString(ex.getStackTrace()));
+        } finally {
+            this.close();
+        }
+        return null;
     }
     
     public List<History> fetchHistoryRecordsByNode(String historyNode) {
-        this.open();
-        List<History> history = History.where("CHANGE_SUMMARY like ?", historyNode).orderBy("ID desc").limit(FETCH_LIMIT);
-        history.size();
-        this.close();
-        return history;
+        try {
+            this.open();
+            List<History> history = History.where("CHANGE_SUMMARY like ?", historyNode).orderBy("ID desc").limit(historyLimit);
+            history.size();
+            return history;
+        } catch (Exception ex) {
+            logger.error(Arrays.toString(ex.getStackTrace()));
+        } finally {
+            this.close();
+        }
+        return null;
     }
     
     public void insertHistory(String user, String ipAddress, String summary) {
@@ -90,10 +114,88 @@ public class Dao {
             history.setChangeSummary(summary);
             history.setChangeDate(new Date());
             history.save();
-            this.close();
         } catch (Exception ex) {
             logger.error(Arrays.toString(ex.getStackTrace()));
+        } finally {
+            this.close();
         }
-        
+    }
+
+    public void putDescription(List<LeafBean> beans) {
+        if (beans == null || beans.size() < 1)  return;
+        try {
+            StringBuffer buffer = new StringBuffer();
+            for (LeafBean leaf : beans) {
+                buffer.append(((buffer.length() == 0 ? "" : "', '")) + ZooKeeperUtil.INSTANCE.pathFormat(leaf.getPath() + "/" + leaf.getName()));
+            }
+            this.open();
+            List<Description> descriptions = Description.where("PATH IN ('" + buffer.toString() + "')");
+            descriptions.size();
+            Iterator<Description> iterator = descriptions.iterator();
+            while (iterator.hasNext()) {
+                Description next = iterator.next();
+                for (LeafBean leaf : beans) {
+                    if (next.getPath().equals(ZooKeeperUtil.INSTANCE.pathFormat(leaf.getPath() + "/" + leaf.getName()))) {
+                        leaf.setDescription(next.getDescription());
+                        break;
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            logger.error(Arrays.toString(ex.getStackTrace()));
+        } finally {
+            this.close();
+        }
+    }
+
+    public void deleteDescription(String... paths) {
+        try {
+            StringBuffer buffer = new StringBuffer();
+            for (String path : paths) {
+                buffer.append((buffer.length() == 0 ? "" : " OR ") + "PATH = '" + ZooKeeperUtil.INSTANCE.pathFormat(path) + "'");
+            }
+            this.open();
+            Description.delete(buffer.toString());
+        } catch (Exception ex) {
+            logger.error(Arrays.toString(ex.getStackTrace()));
+        } finally {
+            this.close();
+        }
+    }
+
+    public void deleteDescriptionByNode(String... nodes) {
+        try {
+            StringBuffer buffer = new StringBuffer();
+            for (String node : nodes) {
+                buffer.append((buffer.length() == 0 ? "" : " OR ") + "PATH LIKE '" + ZooKeeperUtil.INSTANCE.pathFormat(node) + "%'");
+            }
+            this.open();
+            Description.delete(buffer.toString());
+        } catch (Exception ex) {
+            logger.error(Arrays.toString(ex.getStackTrace()));
+        } finally {
+            this.close();
+        }
+    }
+
+    public void insertDescription(String path, String description) {
+        if (StringUtils.isEmptyOrWhitespaceOnly(path) || path.length() > 500) {
+            return;
+        }
+        try {
+            this.open();
+            if (description.length() >= 500) {
+                description = description.substring(0, 500);
+            }
+            Description.delete("PATH = ?", ZooKeeperUtil.INSTANCE.pathFormat(path));
+            Description desc = new Description();
+            desc.setPath(ZooKeeperUtil.INSTANCE.pathFormat(path));
+            desc.setDescription(description);
+            desc.save();
+        } catch (Exception ex) {
+            logger.error(Arrays.toString(ex.getStackTrace()));
+        } finally {
+            this.close();
+        }
     }
 }
