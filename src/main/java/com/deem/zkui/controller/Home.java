@@ -37,6 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
+import org.h2.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +57,11 @@ public class Home extends HttpServlet {
 
             Map<String, Object> templateParam = new HashMap<>();
             String zkPath = request.getParameter("zkPath");
+            String zkRootPath = globalProps.getProperty("zkRootPath");
+
+            if (!StringUtils.isNullOrEmpty(zkRootPath) && (StringUtils.isNullOrEmpty(zkPath) || zkPath.equals("/"))) {
+                zkPath = zkRootPath;
+            }
             String navigate = request.getParameter("navigate");
             ZooKeeper zk = ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps);
             List<String> nodeLst;
@@ -164,7 +170,12 @@ public class Home extends HttpServlet {
                     response.sendRedirect("/home?zkPath=" + displayPath);
                     break;
                 case "Search":
-                    Set<LeafBean> searchResult = ZooKeeperUtil.INSTANCE.searchTree(searchStr, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps), authRole);
+                    String zkPath = request.getParameter("zkPath");
+                    String zkRootPath = globalProps.getProperty("zkRootPath");
+                    if (StringUtils.isNullOrEmpty(zkPath)) {
+                        zkPath = zkRootPath;
+                    }
+                    Set<LeafBean> searchResult = ZooKeeperUtil.INSTANCE.searchTree(searchStr, zkPath, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps), authRole);
                     templateParam.put("searchResult", searchResult);
                     ServletUtil.INSTANCE.renderHtml(request, response, templateParam, "search.ftl.html");
                     break;
