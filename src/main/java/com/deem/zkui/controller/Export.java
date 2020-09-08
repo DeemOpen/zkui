@@ -47,7 +47,6 @@ public class Export extends HttpServlet {
         try {
             Properties globalProps = (Properties) this.getServletContext().getAttribute("globalProps");
             String zkServer = globalProps.getProperty("zkServer");
-            String[] zkServerLst = zkServer.split(",");
 
             String authRole = (String) request.getSession().getAttribute("authRole");
             if (authRole == null) {
@@ -56,7 +55,7 @@ public class Export extends HttpServlet {
             String zkPath = request.getParameter("zkPath");
             StringBuilder output = new StringBuilder();
             output.append("#App Config Dashboard (ACD) dump created on :").append(new Date()).append("\n");
-            Set<LeafBean> leaves = ZooKeeperUtil.INSTANCE.exportTree(zkPath, ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps), authRole);
+            Set<LeafBean> leaves = ZooKeeperUtil.INSTANCE.exportTree(zkPath, ServletUtil.INSTANCE.getZookeeper(request, response, zkServer, globalProps), authRole);
             for (LeafBean leaf : leaves) {
                 output.append(leaf.getPath()).append('=').append(leaf.getName()).append('=').append(ServletUtil.INSTANCE.externalizeNodeValue(leaf.getValue())).append('\n');
             }// for all leaves
