@@ -62,7 +62,6 @@ public class Import extends HttpServlet {
             Properties globalProps = (Properties) this.getServletContext().getAttribute("globalProps");
             Dao dao = new Dao(globalProps);
             String zkServer = globalProps.getProperty("zkServer");
-            String[] zkServerLst = zkServer.split(",");
 
             StringBuilder sbFile = new StringBuilder();
             String scmOverwrite = "false";
@@ -136,7 +135,7 @@ public class Import extends HttpServlet {
             }
             br.close();
 
-            ZooKeeperUtil.INSTANCE.importData(importFile, Boolean.valueOf(scmOverwrite), ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps));
+            ZooKeeperUtil.INSTANCE.importData(importFile, Boolean.valueOf(scmOverwrite), ServletUtil.INSTANCE.getZookeeper(request, response, zkServer, globalProps));
             for (String line : importFile) {
                 if (line.startsWith("-")) {
                     dao.insertHistory((String) request.getSession().getAttribute("authName"), request.getRemoteAddr(), "File: " + uploadFileName + ", Deleting Entry: " + line);

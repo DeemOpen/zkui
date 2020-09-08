@@ -49,7 +49,6 @@ public class RestAccess extends HttpServlet {
         try {
             Properties globalProps = (Properties) this.getServletContext().getAttribute("globalProps");
             String zkServer = globalProps.getProperty("zkServer");
-            String[] zkServerLst = zkServer.split(",");
             String accessRole = ZooKeeperUtil.ROLE_USER;
             if ((globalProps.getProperty("blockPwdOverRest") != null) && (Boolean.valueOf(globalProps.getProperty("blockPwdOverRest")) == Boolean.FALSE)) {
                 accessRole = ZooKeeperUtil.ROLE_ADMIN;
@@ -65,7 +64,7 @@ public class RestAccess extends HttpServlet {
             if (hostName == null) {
                 hostName = ServletUtil.INSTANCE.getRemoteAddr(request);
             }
-            zk = ServletUtil.INSTANCE.getZookeeper(request, response, zkServerLst[0], globalProps);
+            zk = ServletUtil.INSTANCE.getZookeeper(request, response, zkServer, globalProps);
             //get the path of the hosts entry.
             LeafBean hostsNode = null;
             //If app name is mentioned then lookup path is appended with it.
