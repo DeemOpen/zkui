@@ -61,7 +61,9 @@ public class LeafBean implements Comparable<LeafBean> {
     }
 
     public String getStrValue() {
-        return new String(this.value, StandardCharsets.UTF_8);
+        String strValueTmp = new String(this.value, StandardCharsets.UTF_8);
+        logger.info("LeafBean GetStrValue: %v",strValueTmp);
+        return strValueTmp;
     }
 
     public void setStrValue(String strValue) {
