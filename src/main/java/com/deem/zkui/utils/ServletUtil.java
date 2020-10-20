@@ -23,6 +23,7 @@ import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -123,7 +124,7 @@ public enum ServletUtil {
     }
 
     public String externalizeNodeValue(byte[] value) {
-        return value == null ? "" : new String(value).replaceAll("\\n", "\\\\n").replaceAll("\\r", "");
+        return value == null ? "" :  new String(value, StandardCharsets.UTF_8).replaceAll("\\n", "\\\\n").replaceAll("\\r", "");
         // We might want to BASE64 encode it
     }
 
