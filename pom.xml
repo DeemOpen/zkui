@@ -12,7 +12,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jetty.version>9.4.26.v20200117</jetty.version>
+        <jetty.version>9.4.34.v20201102</jetty.version>
     </properties>
     
     <dependencies>
