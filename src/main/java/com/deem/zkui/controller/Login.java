@@ -1,23 +1,23 @@
 /**
- *
  * Copyright (c) 2014, Deem Inc. All Rights Reserved.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- *
  */
 package com.deem.zkui.controller;
 
+import com.deem.zkui.bo.AuthResult;
 import freemarker.template.TemplateException;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,8 +29,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
 import com.deem.zkui.utils.ServletUtil;
 import com.deem.zkui.utils.ZooKeeperUtil;
+import org.h2.util.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -38,6 +40,7 @@ import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.deem.zkui.utils.LdapAuth;
+
 import java.util.Arrays;
 
 @SuppressWarnings("serial")
@@ -73,18 +76,18 @@ public class Login extends HttpServlet {
             //TODO: Implement custom authentication logic if required.
             String username = request.getParameter("username");
             String password = request.getParameter("password");
+            String ldapOu = globalProps.getProperty("ldapOu");
             String role = null;
+            AuthResult authResult = new AuthResult();
             Boolean authenticated = false;
             //if ldap is provided then it overrides roleset.
             if (globalProps.getProperty("ldapAuth").equals("true")) {
-                authenticated = new LdapAuth().authenticateUser(globalProps.getProperty("ldapUrl"), username, password, globalProps.getProperty("ldapDomain"));
+                authResult = new LdapAuth().authenticateUser(globalProps.getProperty("ldapUrl"), username, password, globalProps.getProperty("ldapDomain"), ldapOu);
+                authenticated = authResult.getAuthed();
                 if (authenticated) {
                     JSONArray jsonRoleSet = (JSONArray) ((JSONObject) new JSONParser().parse(globalProps.getProperty("ldapRoleSet"))).get("users");
-                    for (Iterator it = jsonRoleSet.iterator(); it.hasNext();) {
+                    for (Iterator it = jsonRoleSet.iterator(); it.hasNext(); ) {
                         JSONObject jsonUser = (JSONObject) it.next();
-                        if (jsonUser.get("username") != null && jsonUser.get("username").equals("*")) {
-                            role = (String) jsonUser.get("role");
-                        }
                         if (jsonUser.get("username") != null && jsonUser.get("username").equals(username)) {
                             role = (String) jsonUser.get("role");
                         }
@@ -96,7 +99,7 @@ public class Login extends HttpServlet {
                 }
             } else {
                 JSONArray jsonRoleSet = (JSONArray) ((JSONObject) new JSONParser().parse(globalProps.getProperty("userSet"))).get("users");
-                for (Iterator it = jsonRoleSet.iterator(); it.hasNext();) {
+                for (Iterator it = jsonRoleSet.iterator(); it.hasNext(); ) {
                     JSONObject jsonUser = (JSONObject) it.next();
                     if (jsonUser.get("username").equals(username) && jsonUser.get("password").equals(password)) {
                         authenticated = true;
@@ -110,7 +113,7 @@ public class Login extends HttpServlet {
                 session.setAttribute("authRole", role);
                 response.sendRedirect("/home");
             } else {
-                session.setAttribute("flashMsg", "Invalid Login");
+                session.setAttribute("flashMsg", StringUtils.isNullOrEmpty(authResult.getErrMsg()) ? "Invalid Login" : authResult.getErrMsg());
                 ServletUtil.INSTANCE.renderHtml(request, response, templateParam, "login.ftl.html");
             }
 
