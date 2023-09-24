@@ -69,3 +69,9 @@ table td { word-wrap: break-word; }
 code {
     font-size: 80%;
 }
+
+.mono-pre-wrap {
+    font-family: monospace;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
